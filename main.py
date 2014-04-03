@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-03-27: Play around with more sophisticated color maps and plotting other things: obviously, whether counties with more employment have less of a rightward shift in 2012! Maybe also plot state borders.
+2014-04-03: Re-configure all paths. Play around with more sophisticated color maps and plotting other things: obviously, whether counties with more employment have less of a rightward shift in 2012! Maybe also plot state borders.
 """
 
 from matplotlib.collections import PatchCollection
