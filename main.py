@@ -18,12 +18,12 @@ import scipy as sp
 
 import config
 reload(config)
-import fips
-reload(fips)
 import election2008
 reload(election2008)
 import election2012
 reload(election2012)
+import fips
+reload(fips)
 import unemployment
 reload(unemployment)
 
@@ -55,12 +55,12 @@ def main():
         fullDF = fullDF.join(unemploymentDF, how='inner')
     
     # [[[save to csv file]]]
-    fullDF.to_csv(os.path.join(config.basePathS, 'fullDF.csv'))
+    fullDF.to_csv(os.path.join(config.outputPathS, 'fullDF.csv'))
     
     # [[[testing plotting]]]
     fullDF.loc[:, 'DemIsHigher2012'] = (fullDF.loc[:, 'Election2012Dem'] >
                                         fullDF.loc[:, 'Election2012Rep'])
-    fullDF.to_csv(os.path.join(config.basePathS, 'fullDFWithBool.csv'))
+    fullDF.to_csv(os.path.join(config.outputPathS, 'fullDFWithBool.csv'))
     # [[[probably delete this?]]]
     shapeFig = plt.figure()
     ax = shapeFig.add_subplot(1, 1, 1)

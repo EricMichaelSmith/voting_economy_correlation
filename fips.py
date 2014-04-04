@@ -18,7 +18,7 @@ reload(config)
 def main():
     
     # Read in FIPS data
-    filePathS = os.path.join(config.basePathS, 'fips_codes', 'county-fips.csv')
+    filePathS = os.path.join(config.rawDataPathS, 'fips_codes', 'county-fips.csv')
     conversionD = {'msa': (lambda x: str(x)),
                    'pmsa': (lambda x: str(x)),
                    'county': (lambda x: str(x)),

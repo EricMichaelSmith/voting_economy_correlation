@@ -30,7 +30,7 @@ def main():
     See http://stackoverflow.com/questions/15968762/shapefile-and-matplotlib-plot-polygon-collection-of-shapefile-coordinates for how to quickly plot shapes from a shapefile
     """
     
-    filePathS = os.path.join(config.basePathS, 'election_statistics', '2008',
+    filePathS = os.path.join(config.rawDataPathS, 'election_statistics', '2008',
                              'elpo08p020.dbf')
                              
     # Read fields into DataFrame
@@ -68,7 +68,7 @@ def plot_county_results():
     """
     
     # Read in shapedata    
-    filePathS = os.path.join(config.basePathS, 'election_statistics', '2008',
+    filePathS = os.path.join(config.rawDataPathS, 'election_statistics', '2008',
                              'elpo08p020')
     fullSF = shapefile.Reader(filePathS)
     shapeL = fullSF.shapes()

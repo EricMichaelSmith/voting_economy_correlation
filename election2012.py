@@ -18,7 +18,7 @@ reload(config)
 def main():
   
     # Read in 2012 election data
-    filePathS = os.path.join(config.basePathS, 'election_statistics',
+    filePathS = os.path.join(config.rawDataPathS, 'election_statistics',
                              'US_elect_county__2012.csv')
     fullDF = pd.read_csv(filePathS,
                               low_memory=False)

@@ -16,7 +16,7 @@ reload(config)
 
 
 def main(fileNameS, year):
-    pathS = os.path.join(config.basePathS, 'unemployment_statistics')
+    pathS = os.path.join(config.rawDataPathS, 'unemployment_statistics')
     conversionD = {'state_fips_code': (lambda x: str(x)),
                    'county_fips_code': (lambda x: str(x)),
                    'year': (lambda x: int(x)),
