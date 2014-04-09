@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-03: Re-configure all paths. Play around with more sophisticated color maps and plotting other things: obviously, whether counties with more employment have less of a rightward shift in 2012! Maybe also plot state borders.
+2014-04-08: Make everything modular. Make a function to scale a colormap appropriately and then use that to color a shape plot; maybe add a colorbar?
 """
 
 from matplotlib.collections import PatchCollection
@@ -142,6 +142,12 @@ def main():
                                               color=shapeColorT))
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
+    
+
+    ## Make color-range shape plot
+    # {{{import colormap}}}
+    # {{{find conversion factor from range you want to color to colormap}}}
+    # {{{}}}
     
   # Transform all of that data into a usable form
   # {{{}}}
