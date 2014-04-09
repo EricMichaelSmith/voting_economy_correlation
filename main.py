@@ -54,14 +54,13 @@ def main():
     for unemploymentDF in unemploymentDF_L:
         fullDF = fullDF.join(unemploymentDF, how='inner')
     
-    # [[[save to csv file]]]
-    fullDF.to_csv(os.path.join(config.outputPathS, 'fullDF.csv'))
+    # Save to csv file
+    #fullDF.to_csv(os.path.join(config.outputPathS, 'fullDF.csv'))
     
-    # [[[testing plotting]]]
+    
+    ## [[[testing plotting]]]
     fullDF.loc[:, 'DemIsHigher2012'] = (fullDF.loc[:, 'Election2012Dem'] >
                                         fullDF.loc[:, 'Election2012Rep'])
-    fullDF.to_csv(os.path.join(config.outputPathS, 'fullDFWithBool.csv'))
-    # [[[probably delete this?]]]
     shapeFig = plt.figure()
     ax = shapeFig.add_subplot(1, 1, 1)
     shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]
@@ -97,7 +96,17 @@ def main():
 #    ax.set_xlim(shapeBoundsAllShapesL[0], shapeBoundsAllShapesL[2])
 #    ax.set_ylim(shapeBoundsAllShapesL[1], shapeBoundsAllShapesL[3])
     
-    # Make a basic plot of unemployment shift vs. election shift
+
+    ## (1) Shape plot of vote shift
+    # {{{import BrBG colormap (see http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps)}}}
+    # {{{find conversion factor from range you want to color to colormap}}}
+    # {{{}}}
+
+    ## (2) Shape plot of jobs shift
+    # {{{}}}
+    
+    
+    ## (3) Make a basic plot of unemployment shift vs. election shift
     percentDem2008_SR = fullDF.Election2008Dem / fullDF.Election2008Total
     percentDem2012_SR = fullDF.Election2012Dem / fullDF.Election2012Total
     demShiftSR = percentDem2012_SR - percentDem2008_SR
@@ -110,7 +119,11 @@ def main():
     print(sp.stats.pearsonr(uRateShiftSR, demShiftSR))
     
     
-    ## Quickly plot all of the counties in the bottom right clump
+    ## (4) {{{}}}
+    # {{{}}}
+    
+    
+    ## (5) Quickly plot all of the counties in the bottom right clump
     inClumpB_SR = (uRateShiftSR > 2.57) & (100*demShiftSR < -11.6)
     
     clumpScatterFig = plt.figure()
@@ -142,23 +155,5 @@ def main():
                                               color=shapeColorT))
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
-    
-
-    ## Make color-range shape plot
-    # {{{import colormap}}}
-    # {{{find conversion factor from range you want to color to colormap}}}
-    # {{{}}}
-    
-  # Transform all of that data into a usable form
-  # {{{}}}
-  
-  # Calculate 2008/2012 electoral shift; 2008/2009, 2009/2010, 2010/2011, 2011/2012, and 2008/2012 unemployment shifts
-  # {{{}}}
-  
-  # For the electoral shift and each unemployment shift, calculate the R-value, the p-value, and the normalized slope of the correlation
-  # {{{}}}
-  
-  # Depending on the correlations you find, plot the most interesting results on a county map of the US
-  # {{{}}}
   
     return fullDF
