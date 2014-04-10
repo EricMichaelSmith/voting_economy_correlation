@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-08: Make everything modular. Make a function to scale a colormap appropriately and then use that to color a shape plot; maybe add a colorbar?
+2014-04-10: Work on make_shape_plot and then do one for the scatter plot
 """
 
 from matplotlib.collections import PatchCollection
@@ -14,6 +14,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 import scipy as sp
 
 import config
@@ -157,3 +158,55 @@ def main():
     ax.set_ylim(23, 50)
   
     return fullDF
+    
+    
+
+def define_boolean_color(input_df, boolean_column_s, color_l):
+    """ color_l should be two tuples of length 3: one if the boolean value is
+    true and one if it is false"""
+    color_df = pd.DataFrame({'red': [np.nan]*len(input_df),
+                             'green': [np.nan]*len(input_df),
+                             'blue': [np.nan]*len(input_df)})
+
+    # Set columns one by one
+    color_df.ix[input_df[boolean_column_s], 'red'] = color_l[0][0]
+    color_df.ix[~input_df[boolean_column_s], 'red'] = color_l[1][0]
+    color_df.ix[input_df[boolean_column_s], 'green'] = color_l[0][1]
+    color_df.ix[~input_df[boolean_column_s], 'green'] = color_l[1][1]
+    color_df.ix[input_df[boolean_column_s], 'blue'] = color_l[0][2]
+    color_df.ix[~input_df[boolean_column_s], 'blue'] = color_l[1][2]
+    return zip(color_df.red, color_df.green, color_df.blue)
+    
+    
+    
+def make_shape_plot(df, shape_index_l, color_type):
+    shape_fig = plt.figure()
+    ax = shapeFig.add_subplot(1, 1, 1)
+    shape_bounds_all_shapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
+    
+    # {{{use a dictionary to set the color tuple series as either being returned by define_boolean_color or define_gradient_color: see http://code.activestate.com/recipes/181064/ for this}}}
+        
+        # [[[re-write all of this for the new function]]]
+        iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
+        for iShape in iShapeL:            
+            shapeBoundsThisShapeL = shapeL[iShape].bbox
+            shapeBoundsAllShapesL[0] = \
+                min(shapeBoundsThisShapeL[0], shapeBoundsAllShapesL[0])
+            shapeBoundsAllShapesL[1] = \
+                min(shapeBoundsThisShapeL[1], shapeBoundsAllShapesL[1])
+            shapeBoundsAllShapesL[2] = \
+                max(shapeBoundsThisShapeL[2], shapeBoundsAllShapesL[2])
+            shapeBoundsAllShapesL[3] = \
+                max(shapeBoundsThisShapeL[3], shapeBoundsAllShapesL[3])
+            
+            thisShapesPatches = []
+            pointsA = np.array(shapeL[iShape].points)
+            shapeFileParts = shapeL[iShape].parts
+            allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
+            for lPart in xrange(len(shapeFileParts)):
+                thisShapesPatches.append(patches.Polygon(
+                    pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
+            ax.add_collection(PatchCollection(thisShapesPatches,
+                                              color=shapeColorT))
+    ax.set_xlim(-127, -65)
+    ax.set_ylim(23, 50)
