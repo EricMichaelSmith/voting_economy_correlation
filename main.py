@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-10: Work on make_shape_plot and then do one for the scatter plot
+2014-04-12: Set colors in both define_boolean_color and define_gradient_color using for and enumerate. Work on make_shape_plot and then do one for the scatter plot
 """
 
 from matplotlib.collections import PatchCollection
@@ -31,6 +31,9 @@ reload(unemployment)
 
 
 def main():
+
+    
+    ## Create the full DataFrame
     
     # Reading in county and state names
     fipsDF = fips.main()
@@ -59,55 +62,55 @@ def main():
     #fullDF.to_csv(os.path.join(config.outputPathS, 'fullDF.csv'))
     
     
-    ## [[[testing plotting]]]
-    fullDF.loc[:, 'DemIsHigher2012'] = (fullDF.loc[:, 'Election2012Dem'] >
-                                        fullDF.loc[:, 'Election2012Rep'])
-    shapeFig = plt.figure()
-    ax = shapeFig.add_subplot(1, 1, 1)
-    shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]
-    for lFIPS in fullDF.index:
-        if fullDF.loc[lFIPS, 'DemIsHigher2012']:
-            shapeColorT = (0, 0, 1)
-        else:
-            shapeColorT = (1, 0, 0)
-        
-        iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
-        for iShape in iShapeL:            
-            shapeBoundsThisShapeL = shapeL[iShape].bbox
-            shapeBoundsAllShapesL[0] = \
-                min(shapeBoundsThisShapeL[0], shapeBoundsAllShapesL[0])
-            shapeBoundsAllShapesL[1] = \
-                min(shapeBoundsThisShapeL[1], shapeBoundsAllShapesL[1])
-            shapeBoundsAllShapesL[2] = \
-                max(shapeBoundsThisShapeL[2], shapeBoundsAllShapesL[2])
-            shapeBoundsAllShapesL[3] = \
-                max(shapeBoundsThisShapeL[3], shapeBoundsAllShapesL[3])
-            
-            thisShapesPatches = []
-            pointsA = np.array(shapeL[iShape].points)
-            shapeFileParts = shapeL[iShape].parts
-            allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
-            for lPart in xrange(len(shapeFileParts)):
-                thisShapesPatches.append(patches.Polygon(
-                    pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
-            ax.add_collection(PatchCollection(thisShapesPatches,
-                                              color=shapeColorT))
-    ax.set_xlim(-127, -65)
-    ax.set_ylim(23, 50)
-#    ax.set_xlim(shapeBoundsAllShapesL[0], shapeBoundsAllShapesL[2])
-#    ax.set_ylim(shapeBoundsAllShapesL[1], shapeBoundsAllShapesL[3])
+    ## Plotting
     
+    ## [[[testing plotting: delete this]]]
+#    fullDF.loc[:, 'DemIsHigher2012'] = (fullDF.loc[:, 'Election2012Dem'] >
+#                                        fullDF.loc[:, 'Election2012Rep'])
+#    shapeFig = plt.figure()
+#    ax = shapeFig.add_subplot(1, 1, 1)
+#    shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]
+#    for lFIPS in fullDF.index:
+#        if fullDF.loc[lFIPS, 'DemIsHigher2012']:
+#            shapeColorT = (0, 0, 1)
+#        else:
+#            shapeColorT = (1, 0, 0)
+#        
+#        iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
+#        for iShape in iShapeL:            
+#            shapeBoundsThisShapeL = shapeL[iShape].bbox
+#            shapeBoundsAllShapesL[0] = \
+#                min(shapeBoundsThisShapeL[0], shapeBoundsAllShapesL[0])
+#            shapeBoundsAllShapesL[1] = \
+#                min(shapeBoundsThisShapeL[1], shapeBoundsAllShapesL[1])
+#            shapeBoundsAllShapesL[2] = \
+#                max(shapeBoundsThisShapeL[2], shapeBoundsAllShapesL[2])
+#            shapeBoundsAllShapesL[3] = \
+#                max(shapeBoundsThisShapeL[3], shapeBoundsAllShapesL[3])
+#            
+#            thisShapesPatches = []
+#            pointsA = np.array(shapeL[iShape].points)
+#            shapeFileParts = shapeL[iShape].parts
+#            allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
+#            for lPart in xrange(len(shapeFileParts)):
+#                thisShapesPatches.append(patches.Polygon(
+#                    pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
+#            ax.add_collection(PatchCollection(thisShapesPatches,
+#                                              color=shapeColorT))
+#    ax.set_xlim(-127, -65)
+#    ax.set_ylim(23, 50)
+##    ax.set_xlim(shapeBoundsAllShapesL[0], shapeBoundsAllShapesL[2])
+##    ax.set_ylim(shapeBoundsAllShapesL[1], shapeBoundsAllShapesL[3])
 
-    ## (1) Shape plot of vote shift
+    # (1) Shape plot of vote shift
     # {{{import BrBG colormap (see http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps)}}}
     # {{{find conversion factor from range you want to color to colormap}}}
     # {{{}}}
 
-    ## (2) Shape plot of jobs shift
+    # (2) Shape plot of jobs shift
     # {{{}}}
     
-    
-    ## (3) Make a basic plot of unemployment shift vs. election shift
+    # (3) Make a basic plot of unemployment shift vs. election shift
     percentDem2008_SR = fullDF.Election2008Dem / fullDF.Election2008Total
     percentDem2012_SR = fullDF.Election2012Dem / fullDF.Election2012Total
     demShiftSR = percentDem2012_SR - percentDem2008_SR
@@ -119,12 +122,10 @@ def main():
     ax.set_ylim(-25, 15)
     print(sp.stats.pearsonr(uRateShiftSR, demShiftSR))
     
-    
-    ## (4) {{{}}}
+    # (4) {{{}}}
     # {{{}}}
     
-    
-    ## (5) Quickly plot all of the counties in the bottom right clump
+    # (5) Quickly plot all of the counties in the bottom right clump
     inClumpB_SR = (uRateShiftSR > 2.57) & (100*demShiftSR < -11.6)
     
     clumpScatterFig = plt.figure()
@@ -161,32 +162,57 @@ def main():
     
     
 
-def define_boolean_color(input_df, boolean_column_s, color_l):
-    """ color_l should be two tuples of length 3: one if the boolean value is
-    true and one if it is false"""
-    color_df = pd.DataFrame({'red': [np.nan]*len(input_df),
-                             'green': [np.nan]*len(input_df),
-                             'blue': [np.nan]*len(input_df)})
+def define_boolean_color(inputDF, booleanColumnS, colorT):
+    """
+    colorT should be two tuples of length 3: one if the boolean value is
+    true and one if it is false
+    """
+    
+    colorDF = pd.DataFrame({'red': [np.nan]*len(inputDF),
+                            'green': [np.nan]*len(inputDF),
+                            'blue': [np.nan]*len(inputDF)})
 
     # Set columns one by one
-    color_df.ix[input_df[boolean_column_s], 'red'] = color_l[0][0]
-    color_df.ix[~input_df[boolean_column_s], 'red'] = color_l[1][0]
-    color_df.ix[input_df[boolean_column_s], 'green'] = color_l[0][1]
-    color_df.ix[~input_df[boolean_column_s], 'green'] = color_l[1][1]
-    color_df.ix[input_df[boolean_column_s], 'blue'] = color_l[0][2]
-    color_df.ix[~input_df[boolean_column_s], 'blue'] = color_l[1][2]
-    return zip(color_df.red, color_df.green, color_df.blue)
+    colorDF.ix[inputDF[booleanColumnS], 'red'] = colorT[0][0]
+    colorDF.ix[~inputDF[booleanColumnS], 'red'] = colorT[1][0]
+    colorDF.ix[inputDF[booleanColumnS], 'green'] = colorT[0][1]
+    colorDF.ix[~inputDF[booleanColumnS], 'green'] = colorT[1][1]
+    colorDF.ix[inputDF[booleanColumnS], 'blue'] = colorT[0][2]
+    colorDF.ix[~inputDF[booleanColumnS], 'blue'] = colorT[1][2]
+    return zip(colorDF.red, colorDF.green, colorDF.blue)
     
     
     
-def make_shape_plot(df, shape_index_l, color_type):
-    shape_fig = plt.figure()
+def define_gradient_color(inputDF, gradient_column_s, colorT):
+    """ 
+    colorT should be three tuples of length 3: one if the value is maximally
+    negative, one if it is zero, and one if it is maximally positive.
+    Intermediate values will be interpolated.
+    """
+    
+    colorDF = pd.DataFrame({'red': [np.nan]*len(inputDF),
+                            'green': [np.nan]*len(inputDF),
+                            'blue': [np.nan]*len(inputDF)})
+                            
+    segmentDataD = {'red': ((0.0, colorT[0][0], colorT[0][0]),
+                            (0.5, colorT[1][0], colorT)
+                            
+    # {{{}}}
+    
+    
+    
+def make_shape_plot(df, shapeIndexL, shapeL, colorType):
+    shapeFig = plt.figure()
     ax = shapeFig.add_subplot(1, 1, 1)
-    shape_bounds_all_shapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
-    
-    # {{{use a dictionary to set the color tuple series as either being returned by define_boolean_color or define_gradient_color: see http://code.activestate.com/recipes/181064/ for this}}}
+    shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
+
+    colorTypesD = {'boolean': lambda x: define_boolean_color(x),
+                     'gradient': lambda x: define_gradient_color(x)}
+    colorDF = colorTypesD(colorType)
         
-        # [[[re-write all of this for the new function]]]
+    for lFIPS in df.index:
+        thisCountiesColorT = tuple(colorDF.loc[lFIPS])        
+        
         iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
         for iShape in iShapeL:            
             shapeBoundsThisShapeL = shapeL[iShape].bbox
@@ -207,6 +233,6 @@ def make_shape_plot(df, shape_index_l, color_type):
                 thisShapesPatches.append(patches.Polygon(
                     pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
             ax.add_collection(PatchCollection(thisShapesPatches,
-                                              color=shapeColorT))
+                                              color=thisCountiesColorT))
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
