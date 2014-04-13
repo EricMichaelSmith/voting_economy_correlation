@@ -6,11 +6,10 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-12: Set colors in both define_boolean_color and define_gradient_color using for and enumerate. Work on make_shape_plot and then do one for the scatter plot
+2014-04-13: Now, create all of the shape plots you need to by appropriate calls to make_shape_plot. Then, make scatter plots modular as with shape plots, and create all needed scatter plots. Remember to save all plots.
 """
 
-from matplotlib.collections import PatchCollection
-import matplotlib.patches as patches
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -93,9 +92,9 @@ def main():
 #            shapeFileParts = shapeL[iShape].parts
 #            allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
 #            for lPart in xrange(len(shapeFileParts)):
-#                thisShapesPatches.append(patches.Polygon(
+#                thisShapesPatches.append(mpl.patches.Polygon(
 #                    pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
-#            ax.add_collection(PatchCollection(thisShapesPatches,
+#            ax.add_collection(mpl.collections.PatchCollection(thisShapesPatches,
 #                                              color=shapeColorT))
 #    ax.set_xlim(-127, -65)
 #    ax.set_ylim(23, 50)
@@ -151,9 +150,9 @@ def main():
             shapeFileParts = shapeL[iShape].parts
             allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
             for lPart in xrange(len(shapeFileParts)):
-                thisShapesPatches.append(patches.Polygon(
+                thisShapesPatches.append(mpl.patches.Polygon(
                     pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
-            ax.add_collection(PatchCollection(thisShapesPatches,
+            ax.add_collection(mpl.collections.PatchCollection(thisShapesPatches,
                                               color=shapeColorT))
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
@@ -168,17 +167,13 @@ def define_boolean_color(inputDF, booleanColumnS, colorT):
     true and one if it is false
     """
     
-    colorDF = pd.DataFrame({'red': [np.nan]*len(inputDF),
-                            'green': [np.nan]*len(inputDF),
-                            'blue': [np.nan]*len(inputDF)})
+    colorColumnT = ('red', 'green', 'blue')
+    colorDF = pd.DataFrame(np.ndarray((len(inputDF), 3)), columns=colorColumnT)
 
     # Set columns one by one
-    colorDF.ix[inputDF[booleanColumnS], 'red'] = colorT[0][0]
-    colorDF.ix[~inputDF[booleanColumnS], 'red'] = colorT[1][0]
-    colorDF.ix[inputDF[booleanColumnS], 'green'] = colorT[0][1]
-    colorDF.ix[~inputDF[booleanColumnS], 'green'] = colorT[1][1]
-    colorDF.ix[inputDF[booleanColumnS], 'blue'] = colorT[0][2]
-    colorDF.ix[~inputDF[booleanColumnS], 'blue'] = colorT[1][2]
+    for lColumn, columnS in enumerate(colorColumnT):
+        colorDF.ix[inputDF[booleanColumnS], columnS] = colorT[0][lColumn]
+        colorDF.ix[~inputDF[booleanColumnS], columnS] = colorT[1][lColumn]
     return zip(colorDF.red, colorDF.green, colorDF.blue)
     
     
@@ -190,15 +185,37 @@ def define_gradient_color(inputDF, gradient_column_s, colorT):
     Intermediate values will be interpolated.
     """
     
-    colorDF = pd.DataFrame({'red': [np.nan]*len(inputDF),
-                            'green': [np.nan]*len(inputDF),
-                            'blue': [np.nan]*len(inputDF)})
-                            
-    segmentDataD = {'red': ((0.0, colorT[0][0], colorT[0][0]),
-                            (0.5, colorT[1][0], colorT)
-                            
-    # {{{}}}
+    # Find the maximum-magnitude value in the column of interest: this will be
+    # represented with the brightest color.
+    maxMagnitude = max([abs(i) for i in inputDF['gradient_column_s']])
+
+    # For each index in inputDF, interpolate between the values of colorT to
+    # find the approprate color of the index
+    for index in inputDF.index:
+        yield interpolate_gradient_color(colorT,
+                                         inputDF.loc[index, gradient_column_s],
+                                         maxMagnitude)
+
+
+                                                      
+def interpolate_gradient_color(colorT, value, maxMagnitude):
+    """
+    Returns a tuple containing the interpolated color for the input value
+    """
     
+    normalizedMagnitude = abs(value)/maxMagnitude
+    
+    # The higher the magnitude, the closer the color to farColorT; the lower
+    # the magnitude, the closter the color to nearColorT
+    nearColorT = colorT[1]
+    if value < 0:
+        farColorT = colorT[0]
+    else:
+        farColorT = colorT[2]
+    interpolatedColorA = (normalizedMagnitude * np.array(farColorT) +
+                          (1-normalizedMagnitude) * np.array(nearColorT))
+    return tuple(interpolatedColorA)            
+                                                      
     
     
 def make_shape_plot(df, shapeIndexL, shapeL, colorType):
@@ -230,9 +247,9 @@ def make_shape_plot(df, shapeIndexL, shapeL, colorType):
             shapeFileParts = shapeL[iShape].parts
             allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
             for lPart in xrange(len(shapeFileParts)):
-                thisShapesPatches.append(patches.Polygon(
+                thisShapesPatches.append(mpl.patches.Polygon(
                     pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
-            ax.add_collection(PatchCollection(thisShapesPatches,
+            ax.add_collection(mpl.collections.PatchCollection(thisShapesPatches,
                                               color=thisCountiesColorT))
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
