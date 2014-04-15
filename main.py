@@ -58,71 +58,51 @@ def main():
         fullDF = fullDF.join(unemploymentDF, how='inner')
     
     # Save to csv file
-    #fullDF.to_csv(os.path.join(config.outputPathS, 'fullDF.csv'))
+    fullDF.to_csv(os.path.join(config.outputPathS, 'full_df.csv'))
     
     
     ## Plotting
-    
-    ## [[[testing plotting: delete this]]]
-#    fullDF.loc[:, 'DemIsHigher2012'] = (fullDF.loc[:, 'Election2012Dem'] >
-#                                        fullDF.loc[:, 'Election2012Rep'])
-#    shapeFig = plt.figure()
-#    ax = shapeFig.add_subplot(1, 1, 1)
-#    shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]
-#    for lFIPS in fullDF.index:
-#        if fullDF.loc[lFIPS, 'DemIsHigher2012']:
-#            shapeColorT = (0, 0, 1)
-#        else:
-#            shapeColorT = (1, 0, 0)
-#        
-#        iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
-#        for iShape in iShapeL:            
-#            shapeBoundsThisShapeL = shapeL[iShape].bbox
-#            shapeBoundsAllShapesL[0] = \
-#                min(shapeBoundsThisShapeL[0], shapeBoundsAllShapesL[0])
-#            shapeBoundsAllShapesL[1] = \
-#                min(shapeBoundsThisShapeL[1], shapeBoundsAllShapesL[1])
-#            shapeBoundsAllShapesL[2] = \
-#                max(shapeBoundsThisShapeL[2], shapeBoundsAllShapesL[2])
-#            shapeBoundsAllShapesL[3] = \
-#                max(shapeBoundsThisShapeL[3], shapeBoundsAllShapesL[3])
-#            
-#            thisShapesPatches = []
-#            pointsA = np.array(shapeL[iShape].points)
-#            shapeFileParts = shapeL[iShape].parts
-#            allPartsL = list(shapeFileParts) + [pointsA.shape[0]]
-#            for lPart in xrange(len(shapeFileParts)):
-#                thisShapesPatches.append(mpl.patches.Polygon(
-#                    pointsA[allPartsL[lPart]:allPartsL[lPart+1]]))
-#            ax.add_collection(mpl.collections.PatchCollection(thisShapesPatches,
-#                                              color=shapeColorT))
-#    ax.set_xlim(-127, -65)
-#    ax.set_ylim(23, 50)
-##    ax.set_xlim(shapeBoundsAllShapesL[0], shapeBoundsAllShapesL[2])
-##    ax.set_ylim(shapeBoundsAllShapesL[1], shapeBoundsAllShapesL[3])
 
     # (1) Shape plot of vote shift
-    # {{{import BrBG colormap (see http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps)}}}
-    # {{{find conversion factor from range you want to color to colormap}}}
+    fullDF.PercentDem2008 = fullDF.Election2008Dem / fullDF.Election2008Total
+    fullDF.PercentDem2012 = fullDF.Election2012Dem / fullDF.Election2012Total
+    fullDF.DemShift = fullDF.PercentDem2012 - fullDF.PercentDem2008
+    make_shape_plot(fullDF, shapeIndexL, shapeL,
+                    plotColumnS='DemShift',
+                    colorType='gradient',
+                    colorT_T=((1,0,0), (0,0,1)))
+    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
+
+    # (2) Shape plot of unemployment rate shift
+    fullDF.URateShift = fullDF.URate2012 - fullDF.URate2008   
+    make_shape_plot(fullDF, shapeIndexL, shapeL,
+                    plotColumnS='URateShift',
+                    colorType='gradient',
+                    colorT_T=((1,0,0), (0,0,1)))
+    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
+    
+    # (3) Scatter plot of unemployment shift vs. election shift
+    xSR_T = (fullDF.URateShift)
+    ySR_T = (100*fullDF.DemShift)
+    colorT_T = ((0,0,0))
+    make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
+
+    # (4) Scatter plot of unemployment shift vs. election shift, highlighting all
+    # counties with zscore(unemployment shift) > 2 and zscore(election shift) <
+    # -2
+    fullDF.DemShiftZScore = sp.stats.mstats.zscore(fullDF.DemShift)
+    fullDF.URateShiftZScore = sp.stats.mstats.zscore(fullDF.URateShift)
     # {{{}}}
 
-    # (2) Shape plot of jobs shift
+    # (5)
     # {{{}}}
     
-    # (3) Make a basic plot of unemployment shift vs. election shift
-    percentDem2008_SR = fullDF.Election2008Dem / fullDF.Election2008Total
-    percentDem2012_SR = fullDF.Election2012Dem / fullDF.Election2012Total
-    demShiftSR = percentDem2012_SR - percentDem2008_SR
-    uRateShiftSR = fullDF.URate2012 - fullDF.URate2008
-    scatterFig = plt.figure()
-    ax = scatterFig.add_subplot(1, 1, 1)
-    plt.scatter(uRateShiftSR, 100*demShiftSR, edgecolors='none')
-    ax.set_xlim(-5, 10)
-    ax.set_ylim(-25, 15)
-    print(sp.stats.pearsonr(uRateShiftSR, demShiftSR))
+    # Print stats
+    print(sp.stats.pearsonr(fullDF.URateShift, fullDF.DemShift))
+
     
-    # (4) {{{}}}
-    # {{{}}}
+    ## {{{}}}    
     
     # (5) Quickly plot all of the counties in the bottom right clump
     inClumpB_SR = (uRateShiftSR > 2.57) & (100*demShiftSR < -11.6)
@@ -161,9 +141,9 @@ def main():
     
     
 
-def define_boolean_color(inputDF, booleanColumnS, colorT):
+def define_boolean_color(inputDF, booleanColumnS, colorT_T):
     """
-    colorT should be two tuples of length 3: one if the boolean value is
+    colorT_T should be two tuples of length 3: one if the boolean value is
     true and one if it is false
     """
     
@@ -172,33 +152,33 @@ def define_boolean_color(inputDF, booleanColumnS, colorT):
 
     # Set columns one by one
     for lColumn, columnS in enumerate(colorColumnT):
-        colorDF.ix[inputDF[booleanColumnS], columnS] = colorT[0][lColumn]
-        colorDF.ix[~inputDF[booleanColumnS], columnS] = colorT[1][lColumn]
+        colorDF.ix[inputDF[booleanColumnS], columnS] = colorT_T[0][lColumn]
+        colorDF.ix[~inputDF[booleanColumnS], columnS] = colorT_T[1][lColumn]
     return zip(colorDF.red, colorDF.green, colorDF.blue)
     
     
     
-def define_gradient_color(inputDF, gradient_column_s, colorT):
+def define_gradient_color(inputDF, gradientColumnS, colorT_T):
     """ 
-    colorT should be three tuples of length 3: one if the value is maximally
+    colorT_T should be three tuples of length 3: one if the value is maximally
     negative, one if it is zero, and one if it is maximally positive.
     Intermediate values will be interpolated.
     """
     
     # Find the maximum-magnitude value in the column of interest: this will be
     # represented with the brightest color.
-    maxMagnitude = max([abs(i) for i in inputDF['gradient_column_s']])
+    maxMagnitude = max([abs(i) for i in inputDF[gradientColumnS]])
 
-    # For each index in inputDF, interpolate between the values of colorT to
+    # For each index in inputDF, interpolate between the values of colorT_T to
     # find the approprate color of the index
     for index in inputDF.index:
-        yield interpolate_gradient_color(colorT,
-                                         inputDF.loc[index, gradient_column_s],
+        yield interpolate_gradient_color(colorT_T,
+                                         inputDF.loc[index, gradientColumnS],
                                          maxMagnitude)
 
 
                                                       
-def interpolate_gradient_color(colorT, value, maxMagnitude):
+def interpolate_gradient_color(colorT_T, value, maxMagnitude):
     """
     Returns a tuple containing the interpolated color for the input value
     """
@@ -207,27 +187,53 @@ def interpolate_gradient_color(colorT, value, maxMagnitude):
     
     # The higher the magnitude, the closer the color to farColorT; the lower
     # the magnitude, the closter the color to nearColorT
-    nearColorT = colorT[1]
+    nearColorT = colorT_T[1]
     if value < 0:
-        farColorT = colorT[0]
+        farColorT = colorT_T[0]
     else:
-        farColorT = colorT[2]
+        farColorT = colorT_T[2]
     interpolatedColorA = (normalizedMagnitude * np.array(farColorT) +
                           (1-normalizedMagnitude) * np.array(nearColorT))
-    return tuple(interpolatedColorA)            
+    return tuple(interpolatedColorA)
+    
+    
+    
+def make_scatter_plot(xSR_T, ySR_T, colorT_T):
+    """
+    Creates a scatter plot. xSR_T and ySR_T are length-n tuples containing the n
+    Series to be plotted; colors of plot points are given by the length-n tuple
+    colorT_T.
+    """
+    
+    scatterFig = plt.figure()
+    ax = scatterFig.add_subplot(1, 1, 1)
+    for lSeries in xrange(len(xSR_T)):
+        plt.scatter(xSR_T[lSeries], ySR_T[lSeries],
+                    c=colorT_T[lSeries],
+                    edgecolors='none')
+    ax.set_xlim(-5, 10)
+    ax.set_ylim(-25, 15)
                                                       
     
     
-def make_shape_plot(df, shapeIndexL, shapeL, colorType):
+def make_shape_plot(DF, shapeIndexL, shapeL, plotColumnS, colorType, colorT_T):
+    """
+    Creates a shape plot. DF is the DataFrame containing the data to be plotted;
+    shapeIndexL indexes the shapes to plot by FIPS code; shapeL contains the
+    shapes to plot; plotColumnS defines which column to plot the data of;
+    colorType defines whether the plot will be shaded according to a binary or a
+    gradient; colorT_T defines the colors to shade with.
+    """
+    
     shapeFig = plt.figure()
     ax = shapeFig.add_subplot(1, 1, 1)
     shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
 
-    colorTypesD = {'boolean': lambda x: define_boolean_color(x),
-                     'gradient': lambda x: define_gradient_color(x)}
-    colorDF = colorTypesD(colorType)
+    colorTypesD = {'boolean': lambda: define_boolean_color(DF, plotColumnS, colorT_T),
+                   'gradient': lambda: define_gradient_color(DF, plotColumnS, colorT_T)}
+    colorDF = colorTypesD[colorType]
         
-    for lFIPS in df.index:
+    for lFIPS in DF.index:
         thisCountiesColorT = tuple(colorDF.loc[lFIPS])        
         
         iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
