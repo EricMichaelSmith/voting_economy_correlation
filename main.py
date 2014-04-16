@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-15: Debugging... once all of the plots are ready, decide if you want to do #6 on your task list
+2014-04-16: Add x=0 and y=0 lines to the scatter plots, add axis labels to the scatter plots, remove the axes altogether from the shape plots, and investigate the anomalous vote-shift values manually. Once you deal with the anomalous vote-shift values, probably auto-determine the shape and scatter plot limits. Once all of the plots are ready, decide if you want to do #6 on your task list.
 """
 
 import matplotlib as mpl
@@ -57,44 +57,43 @@ def main():
     for unemploymentDF in unemploymentDF_L:
         fullDF = fullDF.join(unemploymentDF, how='inner')
     
-    # Save to csv file
-    fullDF.to_csv(os.path.join(config.outputPathS, 'full_df.csv'))
-    
     
     ## Plotting
 
     # (1) Shape plot of vote shift
-    fullDF.PercentDem2008 = fullDF.Election2008Dem / fullDF.Election2008Total
-    fullDF.PercentDem2012 = fullDF.Election2012Dem / fullDF.Election2012Total
-    fullDF.DemShift = fullDF.PercentDem2012 - fullDF.PercentDem2008
-    make_shape_plot(fullDF, shapeIndexL, shapeL,
-                    plotColumnS='DemShift',
+    fullDF.loc[:, 'PercentDem2008'] = fullDF.Election2008Dem / fullDF.Election2008Total
+    fullDF.loc[:, 'PercentDem2012'] = fullDF.Election2012Dem / fullDF.Election2012Total
+    fullDF.loc[:, 'DemShift'] = fullDF.PercentDem2012 - fullDF.PercentDem2008
+    make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
                     colorTypeS='gradient',
-                    colorT_T=((1,0,0), (0,0,1)))
+                    colorT_T=((1,0,0),
+                              (1,1,1),
+                              (0,0,1)))
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
 
     # (2) Shape plot of unemployment rate shift
-    fullDF.URateShift = fullDF.URate2012 - fullDF.URate2008   
-    make_shape_plot(fullDF, shapeIndexL, shapeL,
-                    plotColumnS='URateShift',
+    fullDF.loc[:, 'URateShift'] = fullDF.URate2012 - fullDF.URate2008   
+    make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
                     colorTypeS='gradient',
-                    colorT_T=((1,0,0), (0,0,1)))
+                    colorT_T=((0,0,1),
+                              (1,1,1),
+                              (1,0,0)))
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
     
     # (3) Scatter plot of unemployment shift vs. election shift
-    xSR_T = (fullDF.URateShift)
-    ySR_T = (100*fullDF.DemShift)
-    colorT_T = ((0,0,1))
+    xSR_T = (fullDF.URateShift,)
+    ySR_T = (100*fullDF.DemShift,)
+    colorT_T = ((0,0,1),)
     make_scatter_plot(xSR_T, ySR_T, colorT_T)
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
 
     # (4) Scatter plot of unemployment shift vs. election shift, highlighting all
     # counties with zscore(unemployment shift) > 2 and zscore(election shift) <
     # -2
-    fullDF.DemShiftZScore = sp.stats.mstats.zscore(fullDF.DemShift)
-    fullDF.URateShiftZScore = sp.stats.mstats.zscore(fullDF.URateShift)
-    fullDF.CoAnomalous = ((fullDF.DemShiftZScore < -2) &
-                          (fullDF.URateShift > 2))
+    fullDF.loc[:, 'DemShiftZScore'] = sp.stats.mstats.zscore(fullDF.DemShift)
+    fullDF.loc[:, 'URateShiftZScore'] = sp.stats.mstats.zscore(fullDF.URateShift)
+    fullDF.loc[:, 'CoAnomalous'] = ((fullDF.DemShiftZScore < -2) &
+                                    (fullDF.URateShift > 2))
     xSR_T = (fullDF.loc[fullDF.CoAnomalous, 'URateShift'],
              fullDF.loc[~fullDF.CoAnomalous, 'URateShift'])
     ySR_T = (100*fullDF.loc[fullDF.CoAnomalous, 'DemShift'],
@@ -105,16 +104,20 @@ def main():
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
     
     # (5) Highlight anomalous points on the shape plot
-    colorT_T = ((0,1,0),
-                (0,0,0))
-    make_shape_plot(fullDF, shapeIndexL, shapeL,
-                    plotColumnS='CoAnomalous',
+    make_shape_plot(fullDF.CoAnomalous, shapeIndexL, shapeL,
                     colorTypeS='boolean',
-                    colorT_T=colorT_T)
+                    colorT_T=((0,1,0),
+                              (0,0,0)))
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
     
     # (6) [[[anything else?]]]
     # {{{}}}
+    
+
+    ## Miscellaneous
+    
+    # Save to csv file
+    fullDF.to_csv(os.path.join(config.outputPathS, 'full_df.csv'))
     
     # Print stats
     print(sp.stats.pearsonr(fullDF.URateShift, fullDF.DemShift))
@@ -123,50 +126,58 @@ def main():
     
     
 
-def define_boolean_color(inputDF, booleanColumnS, colorT_T):
+def define_boolean_color(booleanSR, colorT_T):
     """
-    colorT_T should be two tuples of length 3: one if the boolean value is
-    true and one if it is false
+    booleanSR is the boolean-valued series to define the color from. colorT_T
+    should be two tuples of length 3: one if the boolean value is
+    true and one if it is false.
     """
     
     colorColumnT = ('red', 'green', 'blue')
-    colorDF = pd.DataFrame(np.ndarray((len(inputDF), 3)), columns=colorColumnT)
+    colorDF = pd.DataFrame(np.ndarray((len(booleanSR.index), 3)), 
+                           index=booleanSR.index,
+                           columns=colorColumnT)
 
     # Set columns one by one
     for lColumn, columnS in enumerate(colorColumnT):
-        colorDF.ix[inputDF[booleanColumnS], columnS] = colorT_T[0][lColumn]
-        colorDF.ix[~inputDF[booleanColumnS], columnS] = colorT_T[1][lColumn]
-    return zip(colorDF.red, colorDF.green, colorDF.blue)
+        colorDF.loc[booleanSR, columnS] = colorT_T[0][lColumn]
+        colorDF.loc[~booleanSR, columnS] = colorT_T[1][lColumn]
+    return colorDF
     
     
     
-def define_gradient_color(inputDF, gradientColumnS, colorT_T):
+def define_gradient_color(valueSR, colorT_T):
     """ 
-    colorT_T should be three tuples of length 3: one if the value is maximally
-    negative, one if it is zero, and one if it is maximally positive.
-    Intermediate values will be interpolated.
+    valueSR is the series to define the color from. colorT_T should be three
+    tuples of length 3: one if the value is maximally negative, one if it is
+    zero, and one if it is maximally positive. Intermediate values will be
+    interpolated.
     """
     
     # Find the maximum-magnitude value in the column of interest: this will be
     # represented with the brightest color.
-    maxMagnitude = max([abs(i) for i in inputDF[gradientColumnS]])
+    maxMagnitude = max([abs(i) for i in valueSR])
 
     # For each index in inputDF, interpolate between the values of colorT_T to
     # find the approprate color of the index
-    gradientDF = pd.DataFrame(np.ndarray(inputDF.shape(0), 3),
-                              index=inputDF.index,
+    gradientDF = pd.DataFrame(np.ndarray((len(valueSR.index), 3)),
+                              index=valueSR.index,
                               columns=['red', 'green', 'blue'])
-    for index in inputDF.index:
+    for index in valueSR.index:
         gradientDF.loc[index] = \
         interpolate_gradient_color(colorT_T,
-                                   inputDF.loc[index, gradientColumnS],
+                                   valueSR[index],
                                    maxMagnitude)
+    return gradientDF
 
 
                                                       
 def interpolate_gradient_color(colorT_T, value, maxMagnitude):
     """
-    Returns a tuple containing the interpolated color for the input value
+    colorT_T is three tuples of length 3: one if the value is maximally negative,
+    one if it is zero, and one if it is maximally positive. maxMagnitude sets the
+    intensity of the interpolated color. The function returns a tuple containing
+    the interpolated color for the input value.
     """
     
     normalizedMagnitude = abs(value)/maxMagnitude
@@ -202,24 +213,24 @@ def make_scatter_plot(xSR_T, ySR_T, colorT_T):
                                                       
     
     
-def make_shape_plot(DF, shapeIndexL, shapeL, plotColumnS, colorTypeS, colorT_T):
+def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
     """
-    Creates a shape plot. DF is the DataFrame containing the data to be plotted;
-    shapeIndexL indexes the shapes to plot by FIPS code; shapeL contains the
-    shapes to plot; plotColumnS defines which column to plot the data of;
-    colorTypeS defines whether the plot will be shaded according to a binary or a
-    gradient; colorT_T defines the colors to shade with.
+    Creates a shape plot. valueSR is the Series containing the data to be
+    plotted; shapeIndexL indexes the shapes to plot by FIPS code; shapeL contains
+    the shapes to plot; colorTypeS defines whether the plot will be shaded
+    according to a binary or a gradient; colorT_T defines the colors to shade
+    with.
     """
     
     shapeFig = plt.figure()
     ax = shapeFig.add_subplot(1, 1, 1)
     shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
 
-    colorTypesD = {'boolean': lambda: define_boolean_color(DF, plotColumnS, colorT_T),
-                   'gradient': lambda: define_gradient_color(DF, plotColumnS, colorT_T)}
+    colorTypesD = {'boolean': lambda: define_boolean_color(valueSR, colorT_T),
+                   'gradient': lambda: define_gradient_color(valueSR, colorT_T)}
     colorDF = colorTypesD[colorTypeS]()
         
-    for lFIPS in DF.index:
+    for lFIPS in valueSR.index:
         thisCountiesColorT = tuple(colorDF.loc[lFIPS])        
         
         iShapeL = [i for i,j in enumerate(shapeIndexL) if j==lFIPS]
