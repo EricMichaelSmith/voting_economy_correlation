@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-16: Add x=0 and y=0 lines to the scatter plots, add axis labels to the scatter plots, remove the axes altogether from the shape plots, and investigate the anomalous vote-shift values manually. Once you deal with the anomalous vote-shift values, probably auto-determine the shape and scatter plot limits. Once all of the plots are ready, decide if you want to do #6 on your task list.
+2014-04-16: Add axis labels to the scatter plots, remove the axes altogether from the shape plots, and investigate the anomalous vote-shift values manually (check out Laclede County, Missouri). Once you deal with the anomalous vote-shift values, probably auto-determine the shape and scatter plot limits. Once all of the plots are ready, decide if you want to do #6 on your task list.
 """
 
 import matplotlib as mpl
@@ -202,14 +202,22 @@ def make_scatter_plot(xSR_T, ySR_T, colorT_T):
     colorT_T.
     """
     
+    # Plot all data
     scatterFig = plt.figure()
     ax = scatterFig.add_subplot(1, 1, 1)
     for lSeries in xrange(len(xSR_T)):
         plt.scatter(xSR_T[lSeries], ySR_T[lSeries],
                     c=colorT_T[lSeries],
                     edgecolors='none')
-    ax.set_xlim(-5, 10)
-    ax.set_ylim(-25, 15)
+                    
+    # Plot y=0 and x=0. The stretching of the lines and resetting of the axis
+    # limits is kind of a hack.
+    axisLimitsT = ax.axis()
+    plt.plot([2*axisLimitsT[0], 2*axisLimitsT[1]], [0, 0], 'k')
+    plt.plot([0, 0], [2*axisLimitsT[2], 2*axisLimitsT[3]], 'k')
+    ax.set_xlim(axisLimitsT[0], axisLimitsT[1])
+    ax.set_ylim(axisLimitsT[2], axisLimitsT[3])
+
                                                       
     
     
