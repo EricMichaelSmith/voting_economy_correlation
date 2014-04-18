@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-17: Investigate the two remaining anomalous vote-shift values manually. Do you still want to go with a z-score cutoff of 2? What makes the most sense? Once all of the plots are ready, decide if you want to do #6 on your task list.
+2014-04-18: Investigate the two remaining anomalous vote-shift values manually. Do you still want to go with a z-score cutoff of 2? What makes the most sense? Or maybe just try to do a k-means clustering? Probably also quickly add color bars to the shape plots. Probably don't do #6 on your task list, right?
 """
 
 import matplotlib as mpl
