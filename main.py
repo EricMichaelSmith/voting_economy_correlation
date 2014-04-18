@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-16: Add axis labels to the scatter plots, remove the axes altogether from the shape plots, and investigate the anomalous vote-shift values manually (check out Laclede County, Missouri). Once you deal with the anomalous vote-shift values, probably auto-determine the shape and scatter plot limits. Once all of the plots are ready, decide if you want to do #6 on your task list.
+2014-04-17: Investigate the two remaining anomalous vote-shift values manually. Do you still want to go with a z-score cutoff of 2? What makes the most sense? Once all of the plots are ready, decide if you want to do #6 on your task list.
 """
 
 import matplotlib as mpl
@@ -84,7 +84,9 @@ def main():
     xSR_T = (fullDF.URateShift,)
     ySR_T = (100*fullDF.DemShift,)
     colorT_T = ((0,0,1),)
-    make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax.set_xlabel('Percent change in unemployment between 2008 and 2012')
+    ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
 
     # (4) Scatter plot of unemployment shift vs. election shift, highlighting all
@@ -100,7 +102,9 @@ def main():
              100*fullDF.loc[~fullDF.CoAnomalous, 'DemShift'])
     colorT_T = ((0,1,0),
                 (0,0,0))
-    make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax.set_xlabel('Percent change in unemployment between 2008 and 2012')
+    ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
     
     # (5) Highlight anomalous points on the shape plot
@@ -217,7 +221,7 @@ def make_scatter_plot(xSR_T, ySR_T, colorT_T):
     plt.plot([0, 0], [2*axisLimitsT[2], 2*axisLimitsT[3]], 'k')
     ax.set_xlim(axisLimitsT[0], axisLimitsT[1])
     ax.set_ylim(axisLimitsT[2], axisLimitsT[3])
-
+    return ax
                                                       
     
     
@@ -230,7 +234,7 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
     with.
     """
     
-    shapeFig = plt.figure()
+    shapeFig = plt.figure(figsize=(11,6))
     ax = shapeFig.add_subplot(1, 1, 1)
     shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
 
@@ -264,3 +268,6 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
                                               color=thisCountiesColorT))
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
+    ax.set_axis_off()
+    
+    return ax

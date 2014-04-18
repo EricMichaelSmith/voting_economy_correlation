@@ -50,11 +50,21 @@ def main():
     finalDF = finalDF.loc[~finalDF['FIPS'].isin([39123]) |
                           ~finalDF['Election2008Dem'].isin([12064])]
     
+    # Cleaning, sorting, and setting the index
     finalDF = finalDF.drop_duplicates()
     finalDF = finalDF.sort(columns='FIPS')
     finalDF = finalDF.set_index('FIPS')
-    finalDF = finalDF[pd.notnull(finalDF['Election2008Total'])]
+    
     # This is a work-around for a NaN somewhere in Michigan.
+    finalDF = finalDF[pd.notnull(finalDF['Election2008Total'])]
+    
+    # Correcting the total number of votes cast in Laclede County, MO: the number
+    # in the source file is actually the number from the previous county in the
+    # list, Knox County. If this error isn't corrected, the Obama vote swing in
+    # Laclede County between 2008 and 2012 is -231%. The figure that I'm
+    # replacing the vote total with was taken from Wikipedia
+    # (http://en.wikipedia.org/wiki/Laclede_County,_Missouri, 2014-04-17).
+    finalDF.loc[29105, 'Election2008Total'] = 16379
         
     return (finalDF, shapeIndexL, shapeL)
     
