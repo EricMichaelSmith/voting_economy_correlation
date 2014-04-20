@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-18: Investigate the two remaining anomalous vote-shift values manually. Do you still want to go with a z-score cutoff of 2? What makes the most sense? Or maybe just try to do a k-means clustering? Probably also quickly add color bars to the shape plots. Probably don't do #6 on your task list, right?
+2014-04-20: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Probably also quickly add color bars to the shape plots.
 """
 
 import matplotlib as mpl
@@ -15,6 +15,10 @@ import numpy as np
 import os
 import pandas as pd
 import scipy as sp
+from sklearn.cluster import AffinityPropagation
+from sklearn.cluster import DBSCAN
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 import config
 reload(config)
@@ -58,12 +62,24 @@ def main():
         fullDF = fullDF.join(unemploymentDF, how='inner')
     
     
-    ## Plotting
-
-    # (1) Shape plot of vote shift
+    ## Calculations
+    
+    # Calculating shifts in data between 2008 and 2012
     fullDF.loc[:, 'PercentDem2008'] = fullDF.Election2008Dem / fullDF.Election2008Total
     fullDF.loc[:, 'PercentDem2012'] = fullDF.Election2012Dem / fullDF.Election2012Total
     fullDF.loc[:, 'DemShift'] = fullDF.PercentDem2012 - fullDF.PercentDem2008
+    fullDF.loc[:, 'URateShift'] = fullDF.URate2012 - fullDF.URate2008
+    
+    # Finding anomalous values
+    fullDF.loc[:, 'DemShiftZScore'] = sp.stats.mstats.zscore(fullDF.DemShift)
+    fullDF.loc[:, 'URateShiftZScore'] = sp.stats.mstats.zscore(fullDF.URateShift)
+    fullDF.loc[:, 'CoAnomalous'] = ((fullDF.DemShiftZScore < -2) &
+                                    (fullDF.URateShiftZScore > 2))
+    
+    
+    ## Plotting
+
+    # (1) Shape plot of vote shift
     make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
                     colorTypeS='gradient',
                     colorT_T=((1,0,0),
@@ -72,7 +88,6 @@ def main():
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
 
     # (2) Shape plot of unemployment rate shift
-    fullDF.loc[:, 'URateShift'] = fullDF.URate2012 - fullDF.URate2008   
     make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
                     colorTypeS='gradient',
                     colorT_T=((0,0,1),
@@ -89,13 +104,9 @@ def main():
     ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
 
-    # (4) Scatter plot of unemployment shift vs. election shift, highlighting all
-    # counties with zscore(unemployment shift) > 2 and zscore(election shift) <
-    # -2
-    fullDF.loc[:, 'DemShiftZScore'] = sp.stats.mstats.zscore(fullDF.DemShift)
-    fullDF.loc[:, 'URateShiftZScore'] = sp.stats.mstats.zscore(fullDF.URateShift)
-    fullDF.loc[:, 'CoAnomalous'] = ((fullDF.DemShiftZScore < -2) &
-                                    (fullDF.URateShift > 2))
+    # (4) Scatter plot of unemployment shift vs. election shift, highlighting
+    # all counties with zscore(unemployment shift) > 2 and zscore(election
+    # shift) < -2
     xSR_T = (fullDF.loc[fullDF.CoAnomalous, 'URateShift'],
              fullDF.loc[~fullDF.CoAnomalous, 'URateShift'])
     ySR_T = (100*fullDF.loc[fullDF.CoAnomalous, 'DemShift'],
@@ -114,8 +125,55 @@ def main():
                               (0,0,0)))
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
     
-    # (6) [[[anything else?]]]
-    # {{{}}}
+    # (6) Running DBSCAN clustering on unemployment vs. election scatter plot.
+    # Heavy use of the DBSCAN example at 
+    # http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py. This doesn't work in separating out the bottom right clump - I
+    # either get one massive cluster in the center or, if I shrink eps down way
+    # low, a bunch of mini-clusters in the central clump.
+    
+# I also don't get good results with AffinityPropagation: with different preferences values, the number of preferences I get is as follows: 
+#no preference: 809 clusters
+#preference=-50: 1793 clusters
+#preference=-200: 2818 clusters
+#preference=-10: 700 clusters
+#preference=-1: 263 clusters
+#preference=-0.1: 343 clusters
+#preference=-4: 968 clusters
+
+    scatterFig = plt.figure()
+    ax = scatterFig.add_subplot(1, 1, 1)
+    scatterA = fullDF.loc[:, ['URateShift', 'DemShift']].values
+    standardizedScatterA = StandardScaler().fit_transform(scatterA)
+#    db = DBSCAN(eps=0.1, min_samples=10).fit(standardizedScatterA)
+#    # I'm playing around with different values of eps here to see how big the
+#    # resulting clusters are.
+#    coreSamplesA = db.core_sample_indices_
+#    labelsA = db.labels_
+#    af = AffinityPropagation(preference=-4).fit(standardizedScatterA)
+#    coreSamplesA = af.cluster_centers_indices_
+#    labelsA = af.labels_
+    kmeans = KMeans(n_clusters=2).fit(standardizedScatterA)
+    coreSamplesA = kmeans.cluster_centers_
+    labelsA = kmeans.labels_
+    nClusters_ = len(set(labelsA)) - (1 if -1 in labelsA else 0)
+    print('Estimated number of clusters: %d' % nClusters_)
+    uniqueLabels = set(labelsA)
+    colors = mpl.cm.Spectral(np.linspace(0, 1, len(uniqueLabels)))
+    for label, color in zip(uniqueLabels, colors):
+        if label == -1:
+            color = 'k'
+            markerSize = 6
+        classMembersL = [index[0] for index in np.argwhere(labelsA == label)]
+        for index in classMembersL:
+            coordL = standardizedScatterA[index]
+            if index in coreSamplesA and label != -1:
+                markerSize = 14
+            else:
+                markerSize = 6
+            plt.plot(coordL[0], coordL[1], 'o', markerfacecolor = color,
+                     markersize=markerSize)
+    ax.set_xlabel('Percent change in unemployment between 2008 and 2012')
+    ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
     
 
     ## Miscellaneous

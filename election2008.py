@@ -65,6 +65,19 @@ def main():
     # replacing the vote total with was taken from Wikipedia
     # (http://en.wikipedia.org/wiki/Laclede_County,_Missouri, 2014-04-17).
     finalDF.loc[29105, 'Election2008Total'] = 16379
+
+    # Correcting the number of votes in Washington County, OH, which is
+    # erroneous; the correct number can be found at
+    # http://en.wikipedia.org/wiki/United_States_presidential_election_in_Ohio,_2008,
+    # 2014-04-17.
+    finalDF.loc[39167, 'Election2008Total'] = 29932
+    finalDF.loc[39167, 'Election2008Dem'] = 12368
+
+    # Correcting the number of votes in LaPorte County, IN, which is
+    # erroneous; the correct number can be found at
+    # http://en.wikipedia.org/wiki/United_States_presidential_election_in_Indiana,_2008,
+    # 2014-04-17.
+    finalDF.loc[18091, 'Election2008Total'] = 46919
         
     return (finalDF, shapeIndexL, shapeL)
     
