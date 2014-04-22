@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-20: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) Don't worry about cluster centers. When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Probably also quickly add color bars to the shape plots.
+2014-04-20: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) Don't worry about cluster centers. Define strings for the x- and y-axis labels so that you're not copying and pasting them every time, but don't include axis labeling in the plot functions. When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Probably also quickly add color bars to the shape plots.
 """
 
 import matplotlib as mpl
@@ -265,7 +265,7 @@ def make_cluster_scatter_plot(algorithm, scatterA):
     and http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py.
     """
     
-    # {{{Don't worry about cluster centers; that will simplify the code a lot. Remove edges from around circles for consistency.
+    # {{{Don't worry about cluster centers; that will simplify the code a lot. Remove edges from around circles for consistency.}}}
     
     
     
