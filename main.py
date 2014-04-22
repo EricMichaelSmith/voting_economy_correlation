@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-20: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Probably also quickly add color bars to the shape plots.
+2014-04-20: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) Don't worry about cluster centers. When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Probably also quickly add color bars to the shape plots.
 """
 
 import matplotlib as mpl
@@ -254,6 +254,18 @@ def interpolate_gradient_color(colorT_T, value, maxMagnitude):
     interpolatedColorA = (normalizedMagnitude * np.array(farColorT) +
                           (1-normalizedMagnitude) * np.array(nearColorT))
     return tuple(interpolatedColorA)
+    
+    
+
+def make_cluster_scatter_plot(algorithm, scatterA):
+    """
+    Fits the clustering algorithm to the 2-column XY data contained in scatterA
+    and produces a scatter plot of the results. Use is made of the scikit-learn
+    tutorials at http://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
+    and http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py.
+    """
+    
+    # {{{Don't worry about cluster centers; that will simplify the code a lot. Remove edges from around circles for consistency.
     
     
     
