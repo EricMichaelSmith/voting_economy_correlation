@@ -6,7 +6,7 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-20: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) Don't worry about cluster centers. Define strings for the x- and y-axis labels so that you're not copying and pasting them every time, but don't include axis labeling in the plot functions. When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Probably also quickly add color bars to the shape plots.
+2014-04-29: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) Don't worry about cluster centers. Define strings for the x- and y-axis labels so that you're not copying and pasting them every time, but don't include axis labeling in the plot functions. When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Maybe add color bars to the shape plots if you really want to take the time.
 """
 
 import matplotlib as mpl
@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import pdb
 import scipy as sp
 from sklearn.cluster import AffinityPropagation
 from sklearn.cluster import DBSCAN
@@ -125,21 +126,32 @@ def main():
                               (0,0,0)))
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
     
-    # (6) Running DBSCAN clustering on unemployment vs. election scatter plot.
-    # Heavy use of the DBSCAN example at 
-    # http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py. This doesn't work in separating out the bottom right clump - I
-    # either get one massive cluster in the center or, if I shrink eps down way
-    # low, a bunch of mini-clusters in the central clump.
     
-# I also don't get good results with AffinityPropagation: with different preferences values, the number of preferences I get is as follows: 
-#no preference: 809 clusters
-#preference=-50: 1793 clusters
-#preference=-200: 2818 clusters
-#preference=-10: 700 clusters
-#preference=-1: 263 clusters
-#preference=-0.1: 343 clusters
-#preference=-4: 968 clusters
+    ### (6) Running clustering algorithms on unemployment vs. election scatter
+    # plots. I don't get separation of the bottom right clump with any of the
+    # three methods I've tried, AffinityPropagation, DBSCAN, or KMeans. With
+    # AffinityPropagation, the preference values I tried and the number of
+    # clusters I got are as follows:
+    #   no preference: 809 clusters
+    #   preference=-50: 1793 clusters
+    #   preference=-200: 2818 clusters
+    #   preference=-10: 700 clusters
+    #   preference=-1: 263 clusters
+    #   preference=-0.1: 343 clusters
+    #   preference=-4: 968 clusters
+    # With DBSCAN, I either get one massive cluster in the center or, if I shrink
+    # eps down way low, a bunch of mini-clusters in the central clump.
+    scatterA = fullDF.loc[:, ['URateShift', 'DemShift']].values
+    standardizedScatterA = StandardScaler().fit_transform(scatterA)
+    
+    # Algorithms
+    af = AffinityPropagation(preference=-1).fit(standardizedScatterA)
+    make_cluster_scatter_plot(af, standardizedScatterA)
+    # {{{do this for the other two; what else?}}}
+    
 
+
+    # [[[Attempts at clustering (clean this up)]]]
     scatterFig = plt.figure()
     ax = scatterFig.add_subplot(1, 1, 1)
     scatterA = fullDF.loc[:, ['URateShift', 'DemShift']].values
@@ -264,6 +276,26 @@ def make_cluster_scatter_plot(algorithm, scatterA):
     tutorials at http://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
     and http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py.
     """
+    
+    # Create figure
+    scatterFig = plt.figure()
+    ax = scatterFig.add_subplot(1, 1, 1)
+    
+    # {{{}}}
+    labelA = algorithm.labels_
+    uniqueLabelSet = set(labelA)
+    pdb.set_trace()
+    # [[[Okay, there's something strange here about the tutorial. Shouldn't the minus ones be searched for in uniqueLabelSet and not labelA?]]]
+    # [[[Also, how do you know that labelA is an np.array?]]]
+    numClusters = len(uniqueLabelSet) - (1 if -1 in labelA else 0)
+    ax.set_title('Estimated number of clusters: %d' % numClusters)
+    colors = mpl.cm.Spectral(np.linspace(0, 1, len(uniqueLabelSet)))
+    for label, color in zip(uniqueLabelSet, colors):
+        if label == -1:
+            color = 'k'
+            markerSize = 6
+        classMemberL = [index[0]]
+    
     
     # {{{Don't worry about cluster centers; that will simplify the code a lot. Remove edges from around circles for consistency.}}}
     
