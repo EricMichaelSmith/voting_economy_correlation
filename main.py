@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-import pdb
 import scipy as sp
 from sklearn.cluster import AffinityPropagation
 from sklearn.cluster import DBSCAN
@@ -79,52 +78,56 @@ def main():
     
     
     ## Plotting
-
-    # (1) Shape plot of vote shift
-    make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
-                    colorTypeS='gradient',
-                    colorT_T=((1,0,0),
-                              (1,1,1),
-                              (0,0,1)))
-    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
-
-    # (2) Shape plot of unemployment rate shift
-    make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
-                    colorTypeS='gradient',
-                    colorT_T=((0,0,1),
-                              (1,1,1),
-                              (1,0,0)))
-    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
     
-    # (3) Scatter plot of unemployment shift vs. election shift
-    xSR_T = (fullDF.URateShift,)
-    ySR_T = (100*fullDF.DemShift,)
-    colorT_T = ((0,0,1),)
-    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
-    ax.set_xlabel('Percent change in unemployment between 2008 and 2012')
-    ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
-    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
+    # Scatter plot axes
+    xLabelS = 'Percent change in unemployment between 2008 and 2012'
+    yLabelS = 'Percent change in Obama vote share between 2008 and 2012'
 
-    # (4) Scatter plot of unemployment shift vs. election shift, highlighting
-    # all counties with zscore(unemployment shift) > 2 and zscore(election
-    # shift) < -2
-    xSR_T = (fullDF.loc[fullDF.CoAnomalous, 'URateShift'],
-             fullDF.loc[~fullDF.CoAnomalous, 'URateShift'])
-    ySR_T = (100*fullDF.loc[fullDF.CoAnomalous, 'DemShift'],
-             100*fullDF.loc[~fullDF.CoAnomalous, 'DemShift'])
-    colorT_T = ((0,1,0),
-                (0,0,0))
-    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
-    ax.set_xlabel('Percent change in unemployment between 2008 and 2012')
-    ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
-    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
-    
-    # (5) Highlight anomalous points on the shape plot
-    make_shape_plot(fullDF.CoAnomalous, shapeIndexL, shapeL,
-                    colorTypeS='boolean',
-                    colorT_T=((0,1,0),
-                              (0,0,0)))
-    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
+#    # (1) Shape plot of vote shift
+#    make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
+#                    colorTypeS='gradient',
+#                    colorT_T=((1,0,0),
+#                              (1,1,1),
+#                              (0,0,1)))
+#    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
+#
+#    # (2) Shape plot of unemployment rate shift
+#    make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
+#                    colorTypeS='gradient',
+#                    colorT_T=((0,0,1),
+#                              (1,1,1),
+#                              (1,0,0)))
+#    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
+#    
+#    # (3) Scatter plot of unemployment shift vs. election shift
+#    xSR_T = (fullDF.URateShift,)
+#    ySR_T = (100*fullDF.DemShift,)
+#    colorT_T = ((0,0,1),)
+#    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+#    ax.set_xlabel(xLabelS)
+#    ax.set_ylabel(yLabelS)
+#    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
+#
+#    # (4) Scatter plot of unemployment shift vs. election shift, highlighting
+#    # all counties with zscore(unemployment shift) > 2 and zscore(election
+#    # shift) < -2
+#    xSR_T = (fullDF.loc[fullDF.CoAnomalous, 'URateShift'],
+#             fullDF.loc[~fullDF.CoAnomalous, 'URateShift'])
+#    ySR_T = (100*fullDF.loc[fullDF.CoAnomalous, 'DemShift'],
+#             100*fullDF.loc[~fullDF.CoAnomalous, 'DemShift'])
+#    colorT_T = ((0,1,0),
+#                (0,0,0))
+#    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+#    ax.set_xlabel(xLabelS)
+#    ax.set_ylabel(yLabelS)
+#    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
+#    
+#    # (5) Highlight anomalous points on the shape plot
+#    make_shape_plot(fullDF.CoAnomalous, shapeIndexL, shapeL,
+#                    colorTypeS='boolean',
+#                    colorT_T=((0,1,0),
+#                              (0,0,0)))
+#    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
     
     
     ### (6) Running clustering algorithms on unemployment vs. election scatter
@@ -145,47 +148,20 @@ def main():
     standardizedScatterA = StandardScaler().fit_transform(scatterA)
     
     # Algorithms
-    af = AffinityPropagation(preference=-1).fit(standardizedScatterA)
+    af = AffinityPropagation(preference=-4).fit(standardizedScatterA)
     make_cluster_scatter_plot(af, standardizedScatterA)
-    # {{{do this for the other two; what else?}}}
-    
-
-
-    # [[[Attempts at clustering (clean this up)]]]
-    scatterFig = plt.figure()
-    ax = scatterFig.add_subplot(1, 1, 1)
-    scatterA = fullDF.loc[:, ['URateShift', 'DemShift']].values
-    standardizedScatterA = StandardScaler().fit_transform(scatterA)
-#    db = DBSCAN(eps=0.1, min_samples=10).fit(standardizedScatterA)
-#    # I'm playing around with different values of eps here to see how big the
-#    # resulting clusters are.
-#    coreSamplesA = db.core_sample_indices_
-#    labelsA = db.labels_
-#    af = AffinityPropagation(preference=-4).fit(standardizedScatterA)
-#    coreSamplesA = af.cluster_centers_indices_
-#    labelsA = af.labels_
+    db = DBSCAN(eps=0.1, min_samples=10).fit(standardizedScatterA)
+    make_cluster_scatter_plot(db, standardizedScatterA)
     kmeans = KMeans(n_clusters=2).fit(standardizedScatterA)
-    coreSamplesA = kmeans.cluster_centers_
-    labelsA = kmeans.labels_
-    nClusters_ = len(set(labelsA)) - (1 if -1 in labelsA else 0)
-    print('Estimated number of clusters: %d' % nClusters_)
-    uniqueLabels = set(labelsA)
-    colors = mpl.cm.Spectral(np.linspace(0, 1, len(uniqueLabels)))
-    for label, color in zip(uniqueLabels, colors):
-        if label == -1:
-            color = 'k'
-            markerSize = 6
-        classMembersL = [index[0] for index in np.argwhere(labelsA == label)]
-        for index in classMembersL:
-            coordL = standardizedScatterA[index]
-            if index in coreSamplesA and label != -1:
-                markerSize = 14
-            else:
-                markerSize = 6
-            plt.plot(coordL[0], coordL[1], 'o', markerfacecolor = color,
-                     markersize=markerSize)
-    ax.set_xlabel('Percent change in unemployment between 2008 and 2012')
-    ax.set_ylabel('Percent change in Obama vote share between 2008 and 2012')
+    make_cluster_scatter_plot(af, standardizedScatterA)
+    plotTitleD = {af: 'scatter_plot_affinity_propagation.png',
+                  db: 'scatter_plot_dbscan.png',
+                  kmeans: 'scatter_plot_kmeans.png'}
+    for algorithm, titleS in plotTitleD.iteritems():
+        ax = make_cluster_scatter_plot(algorithm, standardizedScatterA)
+        ax.set_xlabel(xLabelS)
+        ax.set_ylabel(yLabelS)
+        plt.savefig(os.path.join(config.outputPathS, titleS))
     
 
     ## Miscellaneous
@@ -277,27 +253,27 @@ def make_cluster_scatter_plot(algorithm, scatterA):
     and http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py.
     """
     
-    # Create figure
+    # Plot all data
     scatterFig = plt.figure()
     ax = scatterFig.add_subplot(1, 1, 1)
-    
-    # {{{}}}
     labelA = algorithm.labels_
     uniqueLabelSet = set(labelA)
-    pdb.set_trace()
-    # [[[Okay, there's something strange here about the tutorial. Shouldn't the minus ones be searched for in uniqueLabelSet and not labelA?]]]
-    # [[[Also, how do you know that labelA is an np.array?]]]
-    numClusters = len(uniqueLabelSet) - (1 if -1 in labelA else 0)
+    numClusters = len(uniqueLabelSet) - (1 if -1 in uniqueLabelSet else 0)
     ax.set_title('Estimated number of clusters: %d' % numClusters)
-    colors = mpl.cm.Spectral(np.linspace(0, 1, len(uniqueLabelSet)))
-    for label, color in zip(uniqueLabelSet, colors):
+    colorA = mpl.cm.Spectral(np.linspace(0, 1, len(uniqueLabelSet)))
+    for label, color in zip(uniqueLabelSet, colorA):
         if label == -1:
             color = 'k'
-            markerSize = 6
-        classMemberL = [index[0]]
+        classMemberL = [index[0] for index in np.argwhere(labelA == label)]
+        for index in classMemberL:
+            coordL = scatterA[index]
+        plt.scatter(coordL[0], coordL[1], c=color,
+                                          edgecolors='none')
     
+    # Plot x=0 and y=0 lines
+    plot_axes_at_zero(ax)
     
-    # {{{Don't worry about cluster centers; that will simplify the code a lot. Remove edges from around circles for consistency.}}}
+    return ax
     
     
     
@@ -316,13 +292,9 @@ def make_scatter_plot(xSR_T, ySR_T, colorT_T):
                     c=colorT_T[lSeries],
                     edgecolors='none')
                     
-    # Plot y=0 and x=0. The stretching of the lines and resetting of the axis
-    # limits is kind of a hack.
-    axisLimitsT = ax.axis()
-    plt.plot([2*axisLimitsT[0], 2*axisLimitsT[1]], [0, 0], 'k')
-    plt.plot([0, 0], [2*axisLimitsT[2], 2*axisLimitsT[3]], 'k')
-    ax.set_xlim(axisLimitsT[0], axisLimitsT[1])
-    ax.set_ylim(axisLimitsT[2], axisLimitsT[3])
+    # Plot x=0 and y=0 lines
+    plot_axes_at_zero(ax)
+    
     return ax
                                                       
     
@@ -372,4 +344,19 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
     ax.set_ylim(23, 50)
     ax.set_axis_off()
     
+    return ax
+    
+    
+    
+def plot_axes_at_zero(ax):
+    """
+    Plots x=0 and y=0 lines on the current plot. The stretching of the lines and
+    resetting of the axis limits is kind of a hack.
+    """
+    
+    axisLimitsT = ax.axis()
+    plt.plot([2*axisLimitsT[0], 2*axisLimitsT[1]], [0, 0], 'k')
+    plt.plot([0, 0], [2*axisLimitsT[2], 2*axisLimitsT[3]], 'k')
+    ax.set_xlim(axisLimitsT[0], axisLimitsT[1])
+    ax.set_ylim(axisLimitsT[2], axisLimitsT[3])
     return ax
