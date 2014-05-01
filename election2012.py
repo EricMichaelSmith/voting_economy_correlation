@@ -4,6 +4,16 @@
 Created 2014-03-03
 
 Reads in 2012 US election results, from http://www.theguardian.com/news/datablog/2012/nov/07/us-2012-election-county-results-download#data
+
+Suffixes at the end of variable names:
+A: numpy array
+D: dictionary
+DF: pandas DataFrame
+L: list
+S: string
+SR: pandas Series
+T: tuple
+Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
 """
 
 import numpy as np

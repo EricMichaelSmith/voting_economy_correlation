@@ -5,6 +5,16 @@ Created on Thu Mar 13 08:41:32 2014
 @author: Eric
 
 Reads in 2008 county election data (2008 Presidential General Election, County Results, National Atlas of the United States, http://nationalatlas.gov/atlasftp.html?openChapters=chphist#chphist)
+
+Suffixes at the end of variable names:
+A: numpy array
+D: dictionary
+DF: pandas DataFrame
+L: list
+S: string
+SR: pandas Series
+T: tuple
+Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
 """
 
 from matplotlib.collections import PatchCollection
@@ -42,9 +52,9 @@ def main():
     shapeIndexL = finalDF.FIPS.tolist()
 
     # Read in shapefile data
-    fullSF = shapefile.Reader(filePathS)
-    shapeL = fullSF.shapes()
-    del fullSF
+    fullShapeFile = shapefile.Reader(filePathS)
+    shapeL = fullShapeFile.shapes()
+    del fullShapeFile
     
     # Removing the second (incorrect) entry for Ottawa County, OH
     finalDF = finalDF.loc[~finalDF['FIPS'].isin([39123]) |
@@ -93,9 +103,9 @@ def plot_county_results():
     # Read in shapedata    
     filePathS = os.path.join(config.rawDataPathS, 'election_statistics', '2008',
                              'elpo08p020')
-    fullSF = shapefile.Reader(filePathS)
-    shapeL = fullSF.shapes()
-    del fullSF
+    fullShapeFile = shapefile.Reader(filePathS)
+    shapeL = fullShapeFile.shapes()
+    del fullShapeFile
     numShapes = len(shapeL)
     
     # Read in election data
@@ -128,10 +138,10 @@ def plot_county_results():
         ax.add_collection(PatchCollection(thisShapesPatches,
                                           color=shapeColorT))
     
-    shapeBoundsR = np.empty(4)    
-    shapeBoundsR[0] = np.amin(shapeBoundsA[:, 0], 0)
-    shapeBoundsR[1] = np.amin(shapeBoundsA[:, 1], 0)
-    shapeBoundsR[2] = np.amax(shapeBoundsA[:, 2], 0)
-    shapeBoundsR[3] = np.amax(shapeBoundsA[:, 3], 0)    
-    ax.set_xlim(shapeBoundsR[0], shapeBoundsR[2])
-    ax.set_ylim(shapeBoundsR[1], shapeBoundsR[3])
+    shapeBoundsA = np.empty(4)    
+    shapeBoundsA[0] = np.amin(shapeBoundsA[:, 0], 0)
+    shapeBoundsA[1] = np.amin(shapeBoundsA[:, 1], 0)
+    shapeBoundsA[2] = np.amax(shapeBoundsA[:, 2], 0)
+    shapeBoundsA[3] = np.amax(shapeBoundsA[:, 3], 0)    
+    ax.set_xlim(shapeBoundsA[0], shapeBoundsA[2])
+    ax.set_ylim(shapeBoundsA[1], shapeBoundsA[3])

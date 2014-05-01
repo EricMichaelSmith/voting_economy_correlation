@@ -5,6 +5,16 @@ Created on Sun Mar 23 12:38:16 2014
 @author: Eric
 
 Reads in FIPS codes from https://github.com/hadley/data-counties/blob/master/county-fips.csv (Hadley Wickham)
+
+Suffixes at the end of variable names:
+A: numpy array
+D: dictionary
+DF: pandas DataFrame
+L: list
+S: string
+SR: pandas Series
+T: tuple
+Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
 """
 
 import os

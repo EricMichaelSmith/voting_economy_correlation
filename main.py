@@ -6,7 +6,17 @@ Created on Fri Feb 28 07:56:38 2014
 
 Determines whether a correlation exists between 2008/2012 voting shifts and unemployment shifts
 
-2014-04-29: Clean up your attempts to use clustering methods to separate out the bottom right clump: somehow document your attempts in the code in a way that is not too messy. For each of the three methods you tried, have the code plot one graph, titled correctly, using that method with the ideal choices of parameters that you found. (The plotting code should be in a separate function, of course.) Don't worry about cluster centers. Define strings for the x- and y-axis labels so that you're not copying and pasting them every time, but don't include axis labeling in the plot functions. When you write up your report, just go with the z-score>2 thing, but link to each of the three plots using clustering methods. Maybe add color bars to the shape plots if you really want to take the time.
+Suffixes at the end of variable names:
+A: numpy array
+D: dictionary
+DF: pandas DataFrame
+L: list
+S: string
+SR: pandas Series
+T: tuple
+Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
+
+2014-05-01: Figure out why each clustering plot isn't plotting all of the points in the data set. Re-enable the other plots.
 """
 
 import matplotlib as mpl
@@ -148,20 +158,22 @@ def main():
     standardizedScatterA = StandardScaler().fit_transform(scatterA)
     
     # Algorithms
-    af = AffinityPropagation(preference=-4).fit(standardizedScatterA)
-    make_cluster_scatter_plot(af, standardizedScatterA)
-    db = DBSCAN(eps=0.1, min_samples=10).fit(standardizedScatterA)
-    make_cluster_scatter_plot(db, standardizedScatterA)
-    kmeans = KMeans(n_clusters=2).fit(standardizedScatterA)
-    make_cluster_scatter_plot(af, standardizedScatterA)
-    plotTitleD = {af: 'scatter_plot_affinity_propagation.png',
-                  db: 'scatter_plot_dbscan.png',
-                  kmeans: 'scatter_plot_kmeans.png'}
-    for algorithm, titleS in plotTitleD.iteritems():
-        ax = make_cluster_scatter_plot(algorithm, standardizedScatterA)
+    algorithmD = {'AffinityPropagation': 
+                      {'estimator': AffinityPropagation(preference=-4),
+                       'plot_name': 'scatter_plot_affinity_propagation.png'},
+                  'DBSCAN':
+                      {'estimator': DBSCAN(eps=0.1, min_samples=10),
+                       'plot_name': 'scatter_plot_dbscan.png'},
+                  'KMeans':
+                      {'estimator': KMeans(n_clusters=2),
+                       'plot_name': 'scatter_plot_kmeans.png'}}
+    # Each value is a tuple of the estimator and the filename to save the plot as
+    for algorithmS, paramD in algorithmD.iteritems():
+        estimator = paramD['estimator'].fit(standardizedScatterA)
+        ax = make_cluster_scatter_plot(estimator, standardizedScatterA, algorithmS)
         ax.set_xlabel(xLabelS)
         ax.set_ylabel(yLabelS)
-        plt.savefig(os.path.join(config.outputPathS, titleS))
+        plt.savefig(os.path.join(config.outputPathS, paramD['plot_name']))
     
 
     ## Miscellaneous
@@ -245,7 +257,7 @@ def interpolate_gradient_color(colorT_T, value, maxMagnitude):
     
     
 
-def make_cluster_scatter_plot(algorithm, scatterA):
+def make_cluster_scatter_plot(algorithm, scatterA, titleS):
     """
     Fits the clustering algorithm to the 2-column XY data contained in scatterA
     and produces a scatter plot of the results. Use is made of the scikit-learn
@@ -259,7 +271,7 @@ def make_cluster_scatter_plot(algorithm, scatterA):
     labelA = algorithm.labels_
     uniqueLabelSet = set(labelA)
     numClusters = len(uniqueLabelSet) - (1 if -1 in uniqueLabelSet else 0)
-    ax.set_title('Estimated number of clusters: %d' % numClusters)
+    ax.set_title('%s (estimated number of clusters: %d)' % (titleS, numClusters))
     colorA = mpl.cm.Spectral(np.linspace(0, 1, len(uniqueLabelSet)))
     for label, color in zip(uniqueLabelSet, colorA):
         if label == -1:

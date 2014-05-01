@@ -5,6 +5,16 @@ Created on Sat Mar 01 18:34:09 2014
 @author: Eric Smith
 
 Provides for global variables throughout all of VotingEconomyCorrelation
+
+Suffixes at the end of variable names:
+A: numpy array
+D: dictionary
+DF: pandas DataFrame
+L: list
+S: string
+SR: pandas Series
+T: tuple
+Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
 """
 
 

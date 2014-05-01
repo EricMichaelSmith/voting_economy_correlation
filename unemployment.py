@@ -5,6 +5,16 @@ Created on Sun Mar 09 13:34:28 2014
 @author: Eric
 
 Reads in uneployment data from http://www.bls.gov/lau/tables.htm
+
+Suffixes at the end of variable names:
+A: numpy array
+D: dictionary
+DF: pandas DataFrame
+L: list
+S: string
+SR: pandas Series
+T: tuple
+Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
 """
 
 import os
