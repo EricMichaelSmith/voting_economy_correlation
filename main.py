@@ -206,7 +206,9 @@ def define_boolean_color(booleanSR, colorT_T):
     for lColumn, columnS in enumerate(colorColumnT):
         colorDF.loc[booleanSR, columnS] = colorT_T[0][lColumn]
         colorDF.loc[~booleanSR, columnS] = colorT_T[1][lColumn]
-    return colorDF
+    return (colorDF, -1)
+    # The second entry of the returned tuple specifies that there is no maximum
+    # magnitude, like we'd have if this were define_gradient_color
     
     
     
@@ -232,7 +234,7 @@ def define_gradient_color(valueSR, colorT_T):
         interpolate_gradient_color(colorT_T,
                                    valueSR[index],
                                    maxMagnitude)
-    return gradientDF
+    return (gradientDF, maxMagnitude)
 
 
                                                       
@@ -256,6 +258,17 @@ def interpolate_gradient_color(colorT_T, value, maxMagnitude):
     interpolatedColorA = (normalizedMagnitude * np.array(farColorT) +
                           (1-normalizedMagnitude) * np.array(nearColorT))
     return tuple(interpolatedColorA)
+
+
+
+def make_colorbar(fig, maxMagnitude, colorT_T):
+    """
+    Creates a colorbar with the given figure handle fig; the colors are defined
+    according to colorT_T and the values are mapped from -maxMagnitude to
+    +maxMagnitude.
+    """
+    
+    # {{{}}}
     
     
 
@@ -328,7 +341,9 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
 
     colorTypesD = {'boolean': lambda: define_boolean_color(valueSR, colorT_T),
                    'gradient': lambda: define_gradient_color(valueSR, colorT_T)}
-    colorDF = colorTypesD[colorTypeS]()
+    colorT = colorTypesD[colorTypeS]()
+    colorDF = colorT[0]
+    maxMagnitude = colorT[1]
         
     for lFIPS in valueSR.index:
         thisCountiesColorT = tuple(colorDF.loc[lFIPS])        
@@ -357,6 +372,9 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
     ax.set_xlim(-127, -65)
     ax.set_ylim(23, 50)
     ax.set_axis_off()
+    
+    if maxMagnitude != -1:
+        make_colorbar(shapeFig, maxMagnitude, colorT_T)
     
     return ax
     
