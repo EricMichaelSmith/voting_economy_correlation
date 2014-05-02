@@ -16,7 +16,7 @@ SR: pandas Series
 T: tuple
 Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
 
-2014-05-01: Figure out why each clustering plot isn't plotting all of the points in the data set. Re-enable the other plots.
+[[[2014-05-01: Make sure all of the plots are being generated well. So you don't want to take the time to make colorbars, do you?]]]
 """
 
 import matplotlib as mpl
@@ -93,51 +93,51 @@ def main():
     xLabelS = 'Percent change in unemployment between 2008 and 2012'
     yLabelS = 'Percent change in Obama vote share between 2008 and 2012'
 
-#    # (1) Shape plot of vote shift
-#    make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
-#                    colorTypeS='gradient',
-#                    colorT_T=((1,0,0),
-#                              (1,1,1),
-#                              (0,0,1)))
-#    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
-#
-#    # (2) Shape plot of unemployment rate shift
-#    make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
-#                    colorTypeS='gradient',
-#                    colorT_T=((0,0,1),
-#                              (1,1,1),
-#                              (1,0,0)))
-#    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
-#    
-#    # (3) Scatter plot of unemployment shift vs. election shift
-#    xSR_T = (fullDF.URateShift,)
-#    ySR_T = (100*fullDF.DemShift,)
-#    colorT_T = ((0,0,1),)
-#    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
-#    ax.set_xlabel(xLabelS)
-#    ax.set_ylabel(yLabelS)
-#    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
-#
-#    # (4) Scatter plot of unemployment shift vs. election shift, highlighting
-#    # all counties with zscore(unemployment shift) > 2 and zscore(election
-#    # shift) < -2
-#    xSR_T = (fullDF.loc[fullDF.CoAnomalous, 'URateShift'],
-#             fullDF.loc[~fullDF.CoAnomalous, 'URateShift'])
-#    ySR_T = (100*fullDF.loc[fullDF.CoAnomalous, 'DemShift'],
-#             100*fullDF.loc[~fullDF.CoAnomalous, 'DemShift'])
-#    colorT_T = ((0,1,0),
-#                (0,0,0))
-#    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
-#    ax.set_xlabel(xLabelS)
-#    ax.set_ylabel(yLabelS)
-#    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
-#    
-#    # (5) Highlight anomalous points on the shape plot
-#    make_shape_plot(fullDF.CoAnomalous, shapeIndexL, shapeL,
-#                    colorTypeS='boolean',
-#                    colorT_T=((0,1,0),
-#                              (0,0,0)))
-#    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
+    # (1) Shape plot of vote shift
+    make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
+                    colorTypeS='gradient',
+                    colorT_T=((1,0,0),
+                              (1,1,1),
+                              (0,0,1)))
+    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
+
+    # (2) Shape plot of unemployment rate shift
+    make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
+                    colorTypeS='gradient',
+                    colorT_T=((0,0,1),
+                              (1,1,1),
+                              (1,0,0)))
+    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
+    
+    # (3) Scatter plot of unemployment shift vs. election shift
+    xSR_T = (fullDF.URateShift,)
+    ySR_T = (100*fullDF.DemShift,)
+    colorT_T = ((0,0,1),)
+    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax.set_xlabel(xLabelS)
+    ax.set_ylabel(yLabelS)
+    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
+
+    # (4) Scatter plot of unemployment shift vs. election shift, highlighting
+    # all counties with zscore(unemployment shift) > 2 and zscore(election
+    # shift) < -2
+    xSR_T = (fullDF.loc[fullDF.CoAnomalous, 'URateShift'],
+             fullDF.loc[~fullDF.CoAnomalous, 'URateShift'])
+    ySR_T = (100*fullDF.loc[fullDF.CoAnomalous, 'DemShift'],
+             100*fullDF.loc[~fullDF.CoAnomalous, 'DemShift'])
+    colorT_T = ((0,1,0),
+                (0,0,0))
+    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax.set_xlabel(xLabelS)
+    ax.set_ylabel(yLabelS)
+    plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
+    
+    # (5) Highlight anomalous points on the shape plot
+    make_shape_plot(fullDF.CoAnomalous, shapeIndexL, shapeL,
+                    colorTypeS='boolean',
+                    colorT_T=((0,1,0),
+                              (0,0,0)))
+    plt.savefig(os.path.join(config.outputPathS, 'shape_plot_highlight_anomalous.png'))
     
     
     ### (6) Running clustering algorithms on unemployment vs. election scatter
@@ -155,6 +155,8 @@ def main():
     # With DBSCAN, I either get one massive cluster in the center or, if I shrink
     # eps down way low, a bunch of mini-clusters in the central clump.
     scatterA = fullDF.loc[:, ['URateShift', 'DemShift']].values
+    scatterA[:, 1] *= 100
+    # I want to plot DemShift in percentage points
     standardizedScatterA = StandardScaler().fit_transform(scatterA)
     
     # Algorithms
@@ -170,7 +172,7 @@ def main():
     # Each value is a tuple of the estimator and the filename to save the plot as
     for algorithmS, paramD in algorithmD.iteritems():
         estimator = paramD['estimator'].fit(standardizedScatterA)
-        ax = make_cluster_scatter_plot(estimator, standardizedScatterA, algorithmS)
+        ax = make_cluster_scatter_plot(estimator, scatterA, algorithmS)
         ax.set_xlabel(xLabelS)
         ax.set_ylabel(yLabelS)
         plt.savefig(os.path.join(config.outputPathS, paramD['plot_name']))
@@ -259,9 +261,9 @@ def interpolate_gradient_color(colorT_T, value, maxMagnitude):
 
 def make_cluster_scatter_plot(algorithm, scatterA, titleS):
     """
-    Fits the clustering algorithm to the 2-column XY data contained in scatterA
-    and produces a scatter plot of the results. Use is made of the scikit-learn
-    tutorials at http://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
+    Plots the result of fitting a clustering algorithm to the 2-column XY data
+    contained in scatterA. Use is made of the scikit-learn tutorials at
+    http://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
     and http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py.
     """
     
@@ -279,8 +281,8 @@ def make_cluster_scatter_plot(algorithm, scatterA, titleS):
         classMemberL = [index[0] for index in np.argwhere(labelA == label)]
         for index in classMemberL:
             coordL = scatterA[index]
-        plt.scatter(coordL[0], coordL[1], c=color,
-                                          edgecolors='none')
+            plt.scatter(coordL[0], coordL[1], c=color,
+                                              edgecolors='none')
     
     # Plot x=0 and y=0 lines
     plot_axes_at_zero(ax)
