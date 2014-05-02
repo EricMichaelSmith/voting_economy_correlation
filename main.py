@@ -15,11 +15,10 @@ S: string
 SR: pandas Series
 T: tuple
 Underscores indicate chaining: for instance, "fooT_T" is a tuple of tuples
-
-[[[2014-05-01: Make sure all of the plots are being generated well. So you don't want to take the time to make colorbars, do you?]]]
 """
 
 import matplotlib as mpl
+from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -61,9 +60,9 @@ def main():
     fileNameS_L = ["laucnty08.txt", "laucnty09.txt", "laucnty10.txt", "laucnty11.txt",
                   "laucnty12.txt"]
     yearL = range(2008, 2013)
-    unemploymentDF_L = list()
-    for fileNameS, year in zip(fileNameS_L, yearL):
-      unemploymentDF_L.append(unemployment.main(fileNameS, year))
+    unemploymentDF_L = \
+        [unemployment.main(fileNameS, year) for fileNameS, year
+         in zip(fileNameS_L, yearL)]
     
     # Merging DataFrames
     fullDF = fipsDF.join(election2008_DF, how='inner')
@@ -90,32 +89,34 @@ def main():
     ## Plotting
     
     # Scatter plot axes
-    xLabelS = 'Percent change in unemployment between 2008 and 2012'
-    yLabelS = 'Percent change in Obama vote share between 2008 and 2012'
+    URateShiftS = 'Percent change in unemployment between 2008 and 2012'
+    DemShiftS = 'Percent change in Obama vote share between 2008 and 2012'
 
     # (1) Shape plot of vote shift
-    make_shape_plot(fullDF.DemShift, shapeIndexL, shapeL,
+    make_shape_plot(100*fullDF.DemShift, shapeIndexL, shapeL,
                     colorTypeS='gradient',
                     colorT_T=((1,0,0),
                               (1,1,1),
-                              (0,0,1)))
+                              (0,0,1)),
+                    colorBarS=DemShiftS)
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_vote_shift.png'))
 
     # (2) Shape plot of unemployment rate shift
     make_shape_plot(fullDF.URateShift, shapeIndexL, shapeL,
                     colorTypeS='gradient',
-                    colorT_T=((0,0,1),
+                    colorT_T=((0.0,0.5,1.0),
                               (1,1,1),
-                              (1,0,0)))
+                              (1.0,0.5,0.0)),
+                    colorBarS=URateShiftS)
     plt.savefig(os.path.join(config.outputPathS, 'shape_plot_unemployment_rate_shift.png'))
     
     # (3) Scatter plot of unemployment shift vs. election shift
     xSR_T = (fullDF.URateShift,)
     ySR_T = (100*fullDF.DemShift,)
-    colorT_T = ((0,0,1),)
+    colorT_T = ((0,0,0),)
     ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
-    ax.set_xlabel(xLabelS)
-    ax.set_ylabel(yLabelS)
+    ax.set_xlabel(URateShiftS)
+    ax.set_ylabel(DemShiftS)
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
 
     # (4) Scatter plot of unemployment shift vs. election shift, highlighting
@@ -128,8 +129,8 @@ def main():
     colorT_T = ((0,1,0),
                 (0,0,0))
     ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
-    ax.set_xlabel(xLabelS)
-    ax.set_ylabel(yLabelS)
+    ax.set_xlabel(URateShiftS)
+    ax.set_ylabel(DemShiftS)
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_highlight_anomalous.png'))
     
     # (5) Highlight anomalous points on the shape plot
@@ -173,8 +174,8 @@ def main():
     for algorithmS, paramD in algorithmD.iteritems():
         estimator = paramD['estimator'].fit(standardizedScatterA)
         ax = make_cluster_scatter_plot(estimator, scatterA, algorithmS)
-        ax.set_xlabel(xLabelS)
-        ax.set_ylabel(yLabelS)
+        ax.set_xlabel(URateShiftS)
+        ax.set_ylabel(DemShiftS)
         plt.savefig(os.path.join(config.outputPathS, paramD['plot_name']))
     
 
@@ -261,14 +262,30 @@ def interpolate_gradient_color(colorT_T, value, maxMagnitude):
 
 
 
-def make_colorbar(fig, maxMagnitude, colorT_T):
+def make_colorbar(fig, maxMagnitude, colorT_T, labelS):
     """
     Creates a colorbar with the given figure handle fig; the colors are defined
     according to colorT_T and the values are mapped from -maxMagnitude to
-    +maxMagnitude.
+    +maxMagnitude. The colorbar is labeled with labelS.
     """
+
+    # Create the colormap for the colorbar
+    colorL = ['red', 'green', 'blue']
+    colorMapEntry = lambda colorT_T, iColor: \
+        ((0.0, colorT_T[0][iColor], colorT_T[0][iColor]),
+         (0.5, colorT_T[1][iColor], colorT_T[1][iColor]),
+         (1.0, colorT_T[2][iColor], colorT_T[2][iColor]))
+    colorD = {colorS: colorMapEntry(colorT_T, iColor) for iColor, colorS
+              in enumerate(colorL)}
+    colorBarMap = LinearSegmentedColormap('ShapePlotColorMap', colorD)
     
-    # {{{}}}
+    # Create the colormap
+    colorAx = fig.add_axes([0.25, 0.10, 0.50, 0.05])
+    norm = mpl.colors.Normalize(vmin=-maxMagnitude, vmax=maxMagnitude)
+    colorBarHandle = mpl.colorbar.ColorbarBase(colorAx, cmap=colorBarMap,
+                                               norm=norm,
+                                               orientation='horizontal')
+    colorBarHandle.set_label(labelS)
     
     
 
@@ -326,13 +343,14 @@ def make_scatter_plot(xSR_T, ySR_T, colorT_T):
                                                       
     
     
-def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
+def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T,
+                    colorBarS=None):
     """
     Creates a shape plot. valueSR is the Series containing the data to be
     plotted; shapeIndexL indexes the shapes to plot by FIPS code; shapeL contains
     the shapes to plot; colorTypeS defines whether the plot will be shaded
     according to a binary or a gradient; colorT_T defines the colors to shade
-    with.
+    with. colorBarS labels the colorbar.
     """
     
     shapeFig = plt.figure(figsize=(11,6))
@@ -370,12 +388,11 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T):
             ax.add_collection(mpl.collections.PatchCollection(thisShapesPatches,
                                               color=thisCountiesColorT))
     ax.set_xlim(-127, -65)
-    ax.set_ylim(23, 50)
+    ax.set_ylim(20, 50)
     ax.set_axis_off()
     
     if maxMagnitude != -1:
-        make_colorbar(shapeFig, maxMagnitude, colorT_T)
-    
+        make_colorbar(shapeFig, maxMagnitude, colorT_T, colorBarS)
     return ax
     
     
