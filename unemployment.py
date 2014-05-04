@@ -8,6 +8,7 @@ Reads in uneployment data from http://www.bls.gov/lau/tables.htm
 
 Suffixes at the end of variable names:
 A: numpy array
+B: boolean
 D: dictionary
 DF: pandas DataFrame
 L: list
@@ -45,6 +46,7 @@ def main(fileNameS, year):
     tableDF.loc[:, 'fips_code'] = (tableDF.state_fips_code + 
                                    tableDF.county_fips_code).astype(int)
     
+    # Select relevant columns and set index
     finalDF = tableDF.loc[:, ['fips_code', 'unemployed_rate']]
     finalDF.columns = ['FIPS', 'URate' + str(year)]
     finalDF = finalDF.sort(columns='FIPS')

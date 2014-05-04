@@ -8,6 +8,7 @@ Reads in FIPS codes from https://github.com/hadley/data-counties/blob/master/cou
 
 Suffixes at the end of variable names:
 A: numpy array
+B: boolean
 D: dictionary
 DF: pandas DataFrame
 L: list
@@ -39,9 +40,9 @@ def main():
                          converters=conversionD)
     fullDF.loc[:, 'FIPS'] = (fullDF.state_fips + fullDF.county_fips).astype(int)
     
+    # Select relevant columns and set index
     finalDF = fullDF.loc[:, ['FIPS', 'county', 'state']]
     finalDF = finalDF.sort(columns='FIPS')
-    
     finalDF = finalDF.set_index('FIPS')
     
     # Using the now-current FIPS code for Miami-Dade County, FL

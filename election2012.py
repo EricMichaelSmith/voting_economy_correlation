@@ -7,6 +7,7 @@ Reads in 2012 US election results, from http://www.theguardian.com/news/datablog
 
 Suffixes at the end of variable names:
 A: numpy array
+B: boolean
 D: dictionary
 DF: pandas DataFrame
 L: list
@@ -58,6 +59,10 @@ def main():
 
 
 def extract_votes_all_rows(countyDF, partyS):
+    """
+    Find the rows that correspond to the party given in partyS
+    """
+    
     numCounties = countyDF.shape[0]
     partyVotesSR = pd.Series(index=countyDF.index)
     numExtractedVotes = 0

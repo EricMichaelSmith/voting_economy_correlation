@@ -8,6 +8,7 @@ Provides for global variables throughout all of VotingEconomyCorrelation
 
 Suffixes at the end of variable names:
 A: numpy array
+B: boolean
 D: dictionary
 DF: pandas DataFrame
 L: list

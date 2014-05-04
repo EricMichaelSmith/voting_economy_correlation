@@ -8,6 +8,7 @@ Determines whether a correlation exists between 2008/2012 voting shifts and unem
 
 Suffixes at the end of variable names:
 A: numpy array
+B: boolean
 D: dictionary
 DF: pandas DataFrame
 L: list
@@ -114,7 +115,7 @@ def main():
     xSR_T = (fullDF.URateShift,)
     ySR_T = (100*fullDF.DemShift,)
     colorT_T = ((0,0,0),)
-    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T)
+    ax = make_scatter_plot(xSR_T, ySR_T, colorT_T, plotRegressionB = True)
     ax.set_xlabel(URateShiftS)
     ax.set_ylabel(DemShiftS)
     plt.savefig(os.path.join(config.outputPathS, 'scatter_plot_basic.png'))
@@ -314,14 +315,11 @@ def make_cluster_scatter_plot(algorithm, scatterA, titleS):
             plt.scatter(coordL[0], coordL[1], c=color,
                                               edgecolors='none')
     
-    # Plot x=0 and y=0 lines
-    plot_axes_at_zero(ax)
-    
     return ax
     
     
     
-def make_scatter_plot(xSR_T, ySR_T, colorT_T):
+def make_scatter_plot(xSR_T, ySR_T, colorT_T, plotRegressionB=False):
     """
     Creates a scatter plot. xSR_T and ySR_T are length-n tuples containing the n
     Series to be plotted; colors of plot points are given by the length-n tuple
@@ -335,9 +333,13 @@ def make_scatter_plot(xSR_T, ySR_T, colorT_T):
         plt.scatter(xSR_T[lSeries], ySR_T[lSeries],
                     c=colorT_T[lSeries],
                     edgecolors='none')
-                    
+                                        
     # Plot x=0 and y=0 lines
     plot_axes_at_zero(ax)
+    
+    # Plot regression line (one set of points only)
+    if plotRegressionB and len(xSR_T) == 1:
+        plot_regression(ax, xSR_T[0], ySR_T[0])
     
     return ax
                                                       
@@ -353,6 +355,7 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T,
     with. colorBarS labels the colorbar.
     """
     
+    # Set shape colors
     shapeFig = plt.figure(figsize=(11,6))
     ax = shapeFig.add_subplot(1, 1, 1)
     shapeBoundsAllShapesL = [float('inf'), float('inf'), float('-inf'), float('-inf')]    
@@ -363,6 +366,7 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T,
     colorDF = colorT[0]
     maxMagnitude = colorT[1]
         
+    # Add shapes to plot
     for lFIPS in valueSR.index:
         thisCountiesColorT = tuple(colorDF.loc[lFIPS])        
         
@@ -391,6 +395,7 @@ def make_shape_plot(valueSR, shapeIndexL, shapeL, colorTypeS, colorT_T,
     ax.set_ylim(20, 50)
     ax.set_axis_off()
     
+    # Add colorbar
     if maxMagnitude != -1:
         make_colorbar(shapeFig, maxMagnitude, colorT_T, colorBarS)
     return ax
@@ -408,4 +413,28 @@ def plot_axes_at_zero(ax):
     plt.plot([0, 0], [2*axisLimitsT[2], 2*axisLimitsT[3]], 'k')
     ax.set_xlim(axisLimitsT[0], axisLimitsT[1])
     ax.set_ylim(axisLimitsT[2], axisLimitsT[3])
+    return ax
+    
+    
+    
+def plot_regression(ax, xSR, ySR):
+    """
+    Plots a regression line on the current plot. The stretching of the
+    regression line and resetting of the axis limits is kind of a hack.
+    """    
+    
+    # Find correct axis limits
+    axisLimitsT = ax.axis()
+    
+    # Calculate and plot regression
+    slope, intercept, rValue, pValue, stdErr = sp.stats.linregress(xSR, ySR)
+    plt.plot([2*axisLimitsT[0], 2*axisLimitsT[1]],
+             [slope*2*axisLimitsT[0]+intercept,
+              slope*2*axisLimitsT[1]+intercept],
+             'r')
+    
+    # Reset axis limits
+    ax.set_xlim(axisLimitsT[0], axisLimitsT[1])
+    ax.set_ylim(axisLimitsT[2], axisLimitsT[3])
+    
     return ax

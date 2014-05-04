@@ -8,6 +8,7 @@ Reads in 2008 county election data (2008 Presidential General Election, County R
 
 Suffixes at the end of variable names:
 A: numpy array
+B: boolean
 D: dictionary
 DF: pandas DataFrame
 L: list
@@ -47,6 +48,7 @@ def main():
     fullDF = dbf2df(filePathS)
     fullDF = fullDF.convert_objects(convert_numeric=True)
         
+    # Select relevant columns
     finalDF = fullDF.loc[:, ['FIPS', 'TOTAL_VOTE', 'VOTE_DEM', 'VOTE_REP']]
     finalDF.columns = ['FIPS', 'Election2008Total', 'Election2008Dem', 'Election2008Rep']
     shapeIndexL = finalDF.FIPS.tolist()
@@ -122,6 +124,7 @@ def plot_county_results():
     for lShape in xrange(numShapes):
         shapeBoundsA[lShape, :] = shapeL[lShape].bbox
 
+        # Find all patches for the given shape
         thisShapesPatches = []
         pointsA = np.array(shapeL[lShape].points)
         shapeFileParts = shapeL[lShape].parts
@@ -138,6 +141,7 @@ def plot_county_results():
         ax.add_collection(PatchCollection(thisShapesPatches,
                                           color=shapeColorT))
     
+    # Set axes
     shapeBoundsA = np.empty(4)    
     shapeBoundsA[0] = np.amin(shapeBoundsA[:, 0], 0)
     shapeBoundsA[1] = np.amin(shapeBoundsA[:, 1], 0)
